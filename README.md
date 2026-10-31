@@ -33,9 +33,21 @@ rationale: [docs/design.md](docs/design.md).
   its actual value, and the run continues. A failed action FAILs its step and marks
   every later step BLOCKED.
 
-## Quick start
+## Install
 
 ```bash
+npm install -g validshot                # or per project: npm install --save-dev validshot
+npx playwright install chromium        # once, if not already cached
+validshot --help
+```
+
+Pin the exact version in a validated setup (`npm install validshot@0.1.0`): the tool
+version goes on every record, and a version change needs its own assessment.
+
+## Quick start (from a clone, with the example apps)
+
+```bash
+git clone https://github.com/boheling/validshot && cd validshot
 npm install
 npx playwright install chromium        # once, if not already cached
 
@@ -136,7 +148,7 @@ The full YAML reference and edge-case checklist are in
 ### With a coding agent (MCP, authoring only)
 
 ```json
-{ "mcpServers": { "validshot": { "command": "node", "args": ["/path/to/validshot/bin/validshot.mjs", "mcp"] } } }
+{ "mcpServers": { "validshot": { "command": "npx", "args": ["-y", "validshot@0.1.0", "mcp"] } } }
 ```
 
 Tools: `validshot_guide`, `inspect_page`, `check_protocol`, `dry_run`. For Claude
