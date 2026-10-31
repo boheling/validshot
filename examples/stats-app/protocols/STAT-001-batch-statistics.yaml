@@ -1,0 +1,180 @@
+# Converted from the MOCK manual test script manual/TS-STAT-001_Batch-Statistics.xlsx (v2.0).
+# Every step keeps a `source` pointing back to its Excel step. Conversion decisions
+# (corrections, steps not converted) are listed in manual/CONVERSION.md and must be
+# accepted by the reviewer before this protocol is locked.
+protocol:
+  id: STAT-001
+  version: 1
+  title: Batch Statistics — calculations, rounding and input validation
+  system: Batch Statistics (fictional) v2.3.0
+  source: TS-STAT-001 v2.0 (Excel, manual) — steps 1–9 converted; 10 and 11 not converted, see CONVERSION.md
+
+requirements:
+  URS-STAT-01: The application shows the batch statistics page with the software version.
+  URS-STAT-02: For the entered measurements the application shows n, mean, sample standard deviation (n−1), CV % (SD / |mean| × 100), median, minimum and maximum.
+  URS-STAT-03: Results are rounded to the selected number of decimal places (1, 2 or 3).
+  URS-STAT-04: "Rounding is half away from zero on the decimal value (as Excel ROUND): 1.005 → 1.01."
+  URS-STAT-05: SD is not calculated for fewer than 2 values; CV % is not calculated when SD is not calculated or the mean is zero. Values not calculated are shown as '—'.
+  URS-STAT-06: Invalid or empty input shows an error message identifying the problem, and no results are shown.
+
+environment:
+  base_url: http://127.0.0.1:4174/good
+  viewport: { width: 1280, height: 800 }    # as TS-STAT-001 "screen 1280×800"
+  timezone: UTC
+  locale: en-US
+  action_timeout_ms: 5000
+  assert_timeout_ms: 2000
+
+system_version:
+  url: /version.json
+  json: version
+
+steps:
+  - id: 1
+    source: TS-STAT-001 step 1
+    req: URS-STAT-01
+    action: Open the Batch Statistics application.
+    do: { goto: / }
+    expect:
+      - { target: { role: heading, name: Batch statistics, exact: true }, visible: true }
+      - { target: "#app-version", text: "2.3.0" }
+      - { target: { label: n, exact: true }, text: "—" }
+      - { target: { label: Mean, exact: true }, text: "—" }
+      - { target: { label: SD, exact: true }, text: "—" }
+      - { target: { label: CV %, exact: true }, text: "—" }
+      - { target: { label: Median, exact: true }, text: "—" }
+      - { target: { label: Min, exact: true }, text: "—" }
+      - { target: { label: Max, exact: true }, text: "—" }
+
+  - id: 2
+    source: TS-STAT-001 step 2 (data set A)
+    req: URS-STAT-02
+    action: Enter data set A (10.20, 9.80, 10.00, 10.40, 9.60), keep 2 decimal places, click Calculate.
+    do:
+      - fill: { target: { label: Measurements, exact: true }, value: "10.20, 9.80, 10.00, 10.40, 9.60" }
+      - click: { role: button, name: Calculate, exact: true }
+    expect:
+      - { target: { label: n, exact: true }, text: "5" }
+      - { target: { label: Mean, exact: true }, text: "10.00" }
+      - target: { label: SD, exact: true }
+        text: "0.32"
+        note: "Excel expected 0.28, which is the population SD (Test Data uses STDEV.P). URS-STAT-02 requires the sample SD (n−1): 0.316 → 0.32. See CONVERSION.md C1."
+      - target: { label: CV %, exact: true }
+        text: "3.16"
+        note: "Excel expected 2.83, derived from the population SD. Sample SD gives 3.162 → 3.16. See CONVERSION.md C1."
+      - { target: { label: Median, exact: true }, text: "10.00" }
+      - { target: { label: Min, exact: true }, text: "9.60" }
+      - { target: { label: Max, exact: true }, text: "10.40" }
+
+  - id: 3
+    source: TS-STAT-001 step 3
+    req: URS-STAT-03
+    action: Change decimal places to 3 and click Calculate.
+    expected: "Excel: \"Results are shown with 3 decimals.\" Made specific below (see CONVERSION.md C2)."
+    do:
+      - select: { target: { label: Decimal places, exact: true }, option: "3" }
+      - click: { role: button, name: Calculate, exact: true }
+    expect:
+      - { target: { label: n, exact: true }, text: "5" }
+      - { target: { label: Mean, exact: true }, text: "10.000" }
+      - { target: { label: SD, exact: true }, text: "0.316" }
+      - { target: { label: CV %, exact: true }, text: "3.162" }
+      - { target: { label: Median, exact: true }, text: "10.000" }
+      - { target: { label: Min, exact: true }, text: "9.600" }
+      - { target: { label: Max, exact: true }, text: "10.400" }
+
+  - id: 4
+    source: TS-STAT-001 step 4 (data set B)
+    req: [URS-STAT-04, URS-STAT-02]
+    action: Set 2 decimal places, enter data set B (1.00, 1.01), click Calculate.
+    do:
+      - select: { target: { label: Decimal places, exact: true }, option: "2" }
+      - fill: { target: { label: Measurements, exact: true }, value: "1.00, 1.01" }
+      - click: { role: button, name: Calculate, exact: true }
+    expect:
+      - { target: { label: n, exact: true }, text: "2" }
+      - { target: { label: Mean, exact: true }, text: "1.01", note: "Edge case: the mean is exactly 1.005 and must round up (URS-STAT-04)." }
+      - { target: { label: SD, exact: true }, text: "0.01" }
+      - { target: { label: CV %, exact: true }, text: "0.70" }
+      - { target: { label: Median, exact: true }, text: "1.01" }
+      - { target: { label: Min, exact: true }, text: "1.00" }
+      - { target: { label: Max, exact: true }, text: "1.01" }
+
+  - id: 5
+    source: TS-STAT-001 step 5 (data set C)
+    req: URS-STAT-02
+    action: Enter data set C (1, 2, 3, 4), click Calculate.
+    do:
+      - fill: { target: { label: Measurements, exact: true }, value: "1, 2, 3, 4" }
+      - click: { role: button, name: Calculate, exact: true }
+    expect:
+      - { target: { label: n, exact: true }, text: "4" }
+      - { target: { label: Mean, exact: true }, text: "2.50" }
+      - { target: { label: SD, exact: true }, text: "1.29" }
+      - { target: { label: CV %, exact: true }, text: "51.64" }
+      - { target: { label: Median, exact: true }, text: "2.50", note: "Edge case: even count, median is the average of the middle two." }
+      - { target: { label: Min, exact: true }, text: "1.00" }
+      - { target: { label: Max, exact: true }, text: "4.00" }
+
+  - id: 6
+    source: TS-STAT-001 step 6 (data set D)
+    req: URS-STAT-05
+    action: Enter data set D (5), click Calculate.
+    do:
+      - fill: { target: { label: Measurements, exact: true }, value: "5" }
+      - click: { role: button, name: Calculate, exact: true }
+    expect:
+      - { target: { label: n, exact: true }, text: "1" }
+      - { target: { label: Mean, exact: true }, text: "5.00" }
+      - { target: { label: SD, exact: true }, text: "—" }
+      - { target: { label: CV %, exact: true }, text: "—" }
+      - { target: { label: Median, exact: true }, text: "5.00" }
+
+  - id: 7
+    source: TS-STAT-001 step 7 (data set E)
+    req: URS-STAT-05
+    action: Enter data set E (-1, 1), click Calculate.
+    do:
+      - fill: { target: { label: Measurements, exact: true }, value: "-1, 1" }
+      - click: { role: button, name: Calculate, exact: true }
+    expect:
+      - { target: { label: n, exact: true }, text: "2" }
+      - { target: { label: Mean, exact: true }, text: "0.00" }
+      - { target: { label: SD, exact: true }, text: "1.41" }
+      - { target: { label: CV %, exact: true }, text: "—", note: "Edge case: mean is zero, so CV % is not calculated." }
+
+  - id: 8
+    source: TS-STAT-001 step 8 (data set F)
+    req: URS-STAT-06
+    action: Enter data set F (10, abc, 12), click Calculate.
+    do:
+      - fill: { target: { label: Measurements, exact: true }, value: "10, abc, 12" }
+      - click: { role: button, name: Calculate, exact: true }
+    expect:
+      - target: { role: alert }
+        contains: abc
+        note: "URS-STAT-06 requires the message to identify the problem, not a specific wording; the check is that it names the invalid value. See CONVERSION.md C3."
+      - { target: { label: n, exact: true }, text: "—" }
+      - { target: { label: Mean, exact: true }, text: "—" }
+      - { target: { label: SD, exact: true }, text: "—" }
+      - { target: { label: CV %, exact: true }, text: "—" }
+      - { target: { label: Median, exact: true }, text: "—" }
+      - { target: { label: Min, exact: true }, text: "—" }
+      - { target: { label: Max, exact: true }, text: "—" }
+
+  - id: 9
+    source: TS-STAT-001 step 9
+    req: URS-STAT-06
+    action: Clear the Measurements field and click Calculate.
+    do:
+      - fill: { target: { label: Measurements, exact: true }, value: "" }
+      - click: { role: button, name: Calculate, exact: true }
+    expect:
+      - { target: { role: alert }, matches: "[Aa]t least one value" }
+      - { target: { label: n, exact: true }, text: "—" }
+      - { target: { label: Mean, exact: true }, text: "—" }
+      - { target: { label: SD, exact: true }, text: "—" }
+      - { target: { label: CV %, exact: true }, text: "—" }
+      - { target: { label: Median, exact: true }, text: "—" }
+      - { target: { label: Min, exact: true }, text: "—" }
+      - { target: { label: Max, exact: true }, text: "—" }

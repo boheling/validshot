@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>KA Order Entry</title>
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; margin: 0; background: #f6f7f9; color: #1f2937; }
+  header { background: #1e3a5f; color: #fff; padding: 12px 32px; display: flex; justify-content: space-between; }
+  main { max-width: 760px; margin: 32px auto; background: #fff; padding: 24px 32px; border-radius: 8px; box-shadow: 0 1px 3px #0002; position: relative; }
+  label { display: block; font-weight: 600; margin-top: 16px; }
+  select, input { font: inherit; padding: 6px 8px; width: 320px; }
+  .row { display: flex; gap: 32px; margin-top: 20px; }
+  .row div span { display: block; font-size: 13px; color: #6b7280; }
+  .row output { font-size: 22px; font-weight: 700; }
+  #product-name { margin-top: 16px; width: 360px; font-size: 18px; }
+  .truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #stock { display: inline-block; margin-top: 12px; padding: 2px 10px; border-radius: 12px; background: #dcfce7; color: #166534; font-weight: 600; }
+  #error { color: #b91c1c; min-height: 24px; margin-top: 6px; }
+  button { margin-top: 20px; font: inherit; padding: 8px 20px; background: #1e3a5f; color: #fff; border: 0; border-radius: 6px; }
+  button:disabled { background: #9ca3af; }
+  #confirmation { margin-top: 16px; font-weight: 600; color: #166534; }
+  #promo { position: absolute; left: 24px; top: 228px; width: 300px; background: #fde68a; padding: 8px 12px; border-radius: 6px; font-size: 14px; }
+</style>
+</head>
+<body>
+<header><strong>KA Order Entry</strong><span>Version <span id="app-version"></span></span></header>
+<main>
+  <h1>Order</h1>
+  <label for="product">Product</label>
+  <select id="product">
+    <option value="std" data-price="12.50" data-stock="In stock">Standard reagent kit</option>
+    <option value="cal" data-price="189.99" data-stock="Low stock">Extended-range calibrator set for high-throughput analyzers</option>
+  </select>
+  <div id="product-name" aria-label="Selected product"></div>
+  <span id="stock" aria-label="Stock status"></span>
+  <label for="qty">Quantity</label>
+  <input id="qty" type="text" inputmode="numeric" value="1">
+  <div id="error" role="alert"></div>
+  <div class="row">
+    <div><span>Unit price</span><output id="unit" aria-label="Unit price"></output></div>
+    <div><span>Total</span><output id="total" aria-label="Total"></output></div>
+  </div>
+  <button id="place">Place order</button>
+  <div id="confirmation" role="status" aria-label="Order confirmation"></div>
+</main>
+<script>
+  const D = !!window.KA_DEFECTS;   // planted defects for the known-answer (OQ) test
+  const $ = (id) => document.getElementById(id);
+  const money = (x) => '$' + x.toFixed(2);
+  fetch('version.json').then((r) => r.json()).then((v) => { $('app-version').textContent = v.version; });
+  if (D) {
+    $('product-name').classList.add('truncate');             // D3: long names get cut off
+    const promo = document.createElement('div');              // D2: promo banner covers the stock badge
+    promo.id = 'promo'; promo.textContent = 'Free shipping on orders over $500';
+    document.querySelector('main').appendChild(promo);
+  }
+  function update() {
+    const o = $('product').selectedOptions[0];
+    const price = Number(o.dataset.price);
+    $('product-name').textContent = o.textContent;
+    $('stock').textContent = o.dataset.stock;
+    $('unit').textContent = money(price);
+    const raw = $('qty').value.trim();
+    const q = Number(raw);
+    const valid = /^\d+$/.test(raw) && (D ? q >= 0 : q >= 1) && q <= 99;  // D4: 0 accepted
+    $('error').textContent = valid ? '' : 'Quantity must be a whole number from 1 to 99';
+    $('place').disabled = !valid;
+    // D1: total truncated to 10 cents instead of rounded to the cent
+    $('total').textContent = valid ? money(D ? Math.floor(price * q * 10) / 10 : Math.round(price * q * 100) / 100) : '—';
+    $('confirmation').textContent = '';
+  }
+  $('product').addEventListener('change', update);
+  $('qty').addEventListener('input', update);
+  $('place').addEventListener('click', () => {
+    $('confirmation').textContent = `Order placed: ${$('qty').value.trim()} × ${$('product').selectedOptions[0].textContent}`;
+  });
+  update();
+</script>
+</body>
+</html>

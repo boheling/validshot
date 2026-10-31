@@ -1,0 +1,69 @@
+# Public-site DEMO (not evidence): regex101.com, default flavour (PCRE2).
+# Requirements written for this demo; match counts are countable by hand.
+protocol:
+  id: REGEX-001
+  version: 1
+  title: regex101 — match counting, pattern errors, catastrophic backtracking, responsiveness
+  system: regex101.com (public site)
+
+requirements:
+  R1: The editor loads with a regular expression field and a test string field.
+  R2: The number of matches is shown for a pattern and test string.
+  R3: An invalid pattern is reported as an error instead of matching.
+  R4: A pattern with catastrophic backtracking is detected and halted, not left running.
+  R5: Results update within 3 seconds of typing; backtracking is halted within 5 seconds.
+
+environment:
+  base_url: https://regex101.com
+  viewport: { width: 1280, height: 800 }
+  timezone: UTC
+  locale: en-US
+  action_timeout_ms: 20000
+  assert_timeout_ms: 3000
+
+steps:
+  - id: 1
+    req: R1
+    action: Open regex101.
+    do: { goto: / }
+    expect:
+      - { target: { role: textbox, name: Insert your regular expression here }, visible: true, within_ms: 10000 }
+      - { target: { role: textbox, name: Test String }, visible: true }
+
+  - id: 2
+    req: [R2, R5]
+    action: Enter the pattern \d+ and the test string a1b22c333.
+    do:
+      - fill: { target: { role: textbox, name: Insert your regular expression here }, value: "\\d+" }
+      - fill: { target: { role: textbox, name: Test String }, value: "a1b22c333" }
+    expect:
+      - target: 'span:text-matches("^[0-9]+ match(es)?$")'
+        text: "3 matches"
+        within_ms: 3000
+        note: "Known answer: 1, 22, 333"
+      - { target: '[aria-label="Match Information"] button:text-matches("^Match [0-9]+$")', count: 3 }
+
+  - id: 3
+    req: R2
+    action: "Edge case, no match: change the test string to abc."
+    do: { fill: { target: { role: textbox, name: Test String }, value: "abc" } }
+    expect:
+      - { target: '[aria-label="Match Information"] button:text-matches("^Match [0-9]+$")', count: 0 }
+
+  - id: 4
+    req: R3
+    action: "Edge case, invalid pattern: change the pattern to a lone ( ."
+    do: { fill: { target: { role: textbox, name: Insert your regular expression here }, value: "(" } }
+    expect:
+      - { target: { text: Pattern Error, exact: true }, visible: true }
+      - { target: { text: The regular expression contains one or more errors. }, visible: true }
+
+  - id: 5
+    req: [R4, R5]
+    action: "Edge case, catastrophic backtracking: pattern (a+)+$ against 29 a's followed by b."
+    do:
+      - fill: { target: { role: textbox, name: Insert your regular expression here }, value: "(a+)+$" }
+      - fill: { target: { role: textbox, name: Test String }, value: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaab" }
+    expect:
+      - { target: { text: Catastrophic Backtracking, exact: true }, visible: true, within_ms: 5000 }
+      - { target: { text: Catastrophic backtracking has been detected }, contains: "halted" }

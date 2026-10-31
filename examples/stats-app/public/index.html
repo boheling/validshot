@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Batch Statistics</title>
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; margin: 0; background: #f5f6f8; color: #1f2937; }
+  header { background: #234e52; color: #fff; padding: 12px 32px; display: flex; justify-content: space-between; }
+  main { max-width: 860px; margin: 28px auto; background: #fff; padding: 24px 32px; border-radius: 8px; box-shadow: 0 1px 3px #0002; }
+  label { display: block; font-weight: 600; margin-top: 14px; }
+  textarea { font: 15px/1.4 ui-monospace, Menlo, monospace; width: 100%; height: 72px; box-sizing: border-box; padding: 6px 8px; }
+  select { font: inherit; padding: 4px 6px; }
+  button { margin-top: 16px; font: inherit; padding: 8px 20px; background: #234e52; color: #fff; border: 0; border-radius: 6px; }
+  #error { color: #b91c1c; min-height: 24px; margin-top: 8px; }
+  table { border-collapse: collapse; margin-top: 8px; }
+  td, th { border: 1px solid #d1d5db; padding: 6px 14px; text-align: left; }
+  th { background: #f3f4f6; width: 160px; }
+  td { min-width: 120px; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .hint { color: #6b7280; font-size: 14px; }
+</style>
+</head>
+<body>
+<header><strong>Batch Statistics</strong><span>Version <span id="app-version"></span></span></header>
+<main>
+  <h1>Batch statistics</h1>
+  <label for="values">Measurements</label>
+  <textarea id="values" placeholder="e.g. 10.2, 9.8, 10.0"></textarea>
+  <div class="hint">Separate values with commas, spaces or new lines.</div>
+  <label for="dp">Decimal places</label>
+  <select id="dp"><option>1</option><option selected>2</option><option>3</option></select>
+  <div><button id="calc">Calculate</button></div>
+  <div id="error" role="alert"></div>
+  <h2>Results</h2>
+  <table aria-label="Results">
+    <tr><th>n</th><td aria-label="n" id="n">—</td></tr>
+    <tr><th>Mean</th><td aria-label="Mean" id="mean">—</td></tr>
+    <tr><th>SD</th><td aria-label="SD" id="sd">—</td></tr>
+    <tr><th>CV %</th><td aria-label="CV %" id="cv">—</td></tr>
+    <tr><th>Median</th><td aria-label="Median" id="median">—</td></tr>
+    <tr><th>Min</th><td aria-label="Min" id="min">—</td></tr>
+    <tr><th>Max</th><td aria-label="Max" id="max">—</td></tr>
+  </table>
+</main>
+<script>
+  const D = !!window.STATS_DEFECTS;  // planted defects for the known-answer test
+  const $ = (id) => document.getElementById(id);
+  fetch('version.json').then((r) => r.json()).then((v) => { $('app-version').textContent = v.version; });
+  // round half away from zero on the decimal representation (what Excel's ROUND does);
+  // the defective variant uses toFixed, which rounds the binary value (1.005 → "1.00")
+  const fmt = (x, dp) => {
+    if (D) return x.toFixed(dp);
+    const s = Math.sign(x) || 1, a = Math.abs(x);
+    return (s * Number(Math.round(Number(a + 'e' + dp)) + 'e-' + dp)).toFixed(dp);
+  };
+  const OUT = ['n', 'mean', 'sd', 'cv', 'median', 'min', 'max'];
+  function show(r) { for (const k of OUT) $(k).textContent = r?.[k] ?? '—'; }
+  $('calc').addEventListener('click', () => {
+    const raw = $('values').value.split(/[\s,]+/).filter(Boolean);
+    const dp = Number($('dp').value);
+    $('error').textContent = '';
+    if (!raw.length) { show(null); $('error').textContent = 'Enter at least one value.'; return; }
+    const bad = raw.findIndex((t) => !/^[-+]?(\d+\.?\d*|\.\d+)$/.test(t));
+    if (bad >= 0) { show(null); $('error').textContent = `Value ${bad + 1} is not a number: "${raw[bad]}"`; return; }
+    const v = raw.map(Number), n = v.length;
+    const mean = v.reduce((a, b) => a + b, 0) / n;
+    const ss = v.reduce((a, b) => a + (b - mean) ** 2, 0);
+    const sd = n > 1 ? Math.sqrt(ss / (D ? n : n - 1)) : null;   // D: population SD
+    const s = [...v].sort((a, b) => a - b);
+    const median = n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
+    show({
+      n: String(n), mean: fmt(mean, dp), sd: sd === null ? '—' : fmt(sd, dp),
+      cv: sd === null || Math.abs(mean) < 1e-12 ? '—' : fmt(sd / Math.abs(mean) * 100, dp),
+      median: fmt(median, dp), min: fmt(s[0], dp), max: fmt(s[n - 1], dp),
+    });
+  });
+</script>
+</body>
+</html>

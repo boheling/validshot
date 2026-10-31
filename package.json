@@ -1,0 +1,36 @@
+{
+  "name": "validshot",
+  "version": "0.1.0",
+  "description": "Deterministic front-end validation runner: locked YAML protocols, raw screenshot evidence, SHA-256 hash-chained audit trail, signable execution records (PDF + JSON).",
+  "author": "boheling <boheling@gmail.com>",
+  "type": "module",
+  "bin": {
+    "validshot": "bin/validshot.mjs"
+  },
+  "scripts": {
+    "test": "node --test",
+    "ka-app": "node examples/ka-app/server.mjs",
+    "stats-app": "node examples/stats-app/server.mjs"
+  },
+  "files": [
+    "bin",
+    "src",
+    "skills",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/boheling/validshot.git"
+  },
+  "homepage": "https://github.com/boheling/validshot#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "playwright": "1.64.0",
+    "yaml": "2.9.1",
+    "zod": "4.6.5"
+  }
+}

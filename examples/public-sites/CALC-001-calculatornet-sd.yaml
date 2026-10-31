@@ -1,0 +1,95 @@
+# Public-site DEMO (not evidence): calculator.net's standard deviation calculator.
+# The site publishes no specification, so the requirements below are written for this
+# demo. Numeric expectations are computed independently (Python statistics), not read
+# off the site. Error wording was observed on the site (characterisation) and is marked.
+protocol:
+  id: CALC-001
+  version: 1
+  title: calculator.net standard deviation — known-answer values, edge cases, response time
+  system: calculator.net (public site, version not exposed)
+
+requirements:
+  R1: The calculator page loads and shows its input form.
+  R2: Population mode reports the population SD σ, count, mean and variance of the input.
+  R3: Sample mode reports the sample SD s (n−1) and sample variance.
+  R4: Small values keep full precision (no premature rounding).
+  R5: Non-numeric input and fewer than two values are rejected with a message and no result.
+  R6: A calculation returns its result within 5 seconds.
+
+environment:
+  base_url: https://www.calculator.net
+  viewport: { width: 1280, height: 800 }
+  timezone: UTC
+  locale: en-US
+  action_timeout_ms: 20000
+  assert_timeout_ms: 3000
+
+steps:
+  - id: 1
+    req: [R1, R6]
+    action: Open the standard deviation calculator.
+    do: { goto: /standard-deviation-calculator.html }
+    expect:
+      - { target: { role: heading, name: Standard Deviation Calculator, exact: true }, visible: true, within_ms: 8000 }
+      - { target: textarea.infulltxarea, visible: true }
+      - { target: { role: button, name: Calculate, exact: true }, enabled: true }
+
+  - id: 2
+    req: [R2, R6]
+    action: Enter 10.2, 9.8, 10.0, 10.4, 9.6 (population mode, the default) and click Calculate.
+    do:
+      - fill: { target: textarea.infulltxarea, value: "10.2, 9.8, 10.0, 10.4, 9.6" }
+      - click: { role: button, name: Calculate, exact: true }
+    expect:
+      - target: h2.h2result + p.bigtext
+        contains: "Standard Deviation, σ: 0.28284271247462"
+        within_ms: 5000
+        note: "Independent: sqrt(0.4 / 5) = 0.282842712474619"
+      - { target: 'tr:has(> td:text-is("Count, N:")) > td:nth-child(2)', text: "5" }
+      - { target: 'tr:has(> td:has-text("Mean")) > td:nth-child(2)', text: "10" }
+      - { target: 'tr:has(> td:has-text("Variance")) > td:nth-child(2)', text: "0.08" }
+
+  - id: 3
+    req: [R3, R6]
+    action: Choose Sample and click Calculate again with the same values.
+    do:
+      - click: { text: Sample, exact: true }
+      - click: { role: button, name: Calculate, exact: true }
+    expect:
+      - target: h2.h2result + p.bigtext
+        contains: "Standard Deviation, s: 0.31622776601684"
+        within_ms: 5000
+        note: "Independent: sqrt(0.4 / 4) = 0.316227766016838"
+      - { target: 'tr:has(> td:has-text("Variance")) > td:nth-child(2)', text: "0.1" }
+      - { url: "ctype=s" }
+
+  - id: 4
+    req: R4
+    action: "Edge case, small values: enter 1.00, 1.01 (sample mode) and click Calculate."
+    do:
+      - fill: { target: textarea.infulltxarea, value: "1.00, 1.01" }
+      - click: { role: button, name: Calculate, exact: true }
+    expect:
+      - target: h2.h2result + p.bigtext
+        matches: "s: 0\\.00707106781186"
+        note: "Independent: sqrt(0.00005) = 0.00707106781186548; last digits not asserted (display precision unspecified)"
+
+  - id: 5
+    req: R5
+    action: "Edge case, text in the input: enter 10, abc, 12 and click Calculate."
+    do:
+      - fill: { target: textarea.infulltxarea, value: "10, abc, 12" }
+      - click: { role: button, name: Calculate, exact: true }
+    expect:
+      - { target: { text: Please provide numbers only. }, visible: true, note: "Wording observed on the site (characterisation), not from a specification." }
+      - { target: h2.h2result, count: 0 }
+
+  - id: 6
+    req: R5
+    action: "Edge case, a single value: enter 5 and click Calculate."
+    do:
+      - fill: { target: textarea.infulltxarea, value: "5" }
+      - click: { role: button, name: Calculate, exact: true }
+    expect:
+      - { target: { text: Please provide at least two numbers. }, visible: true, note: "Wording observed on the site (characterisation)." }
+      - { target: h2.h2result, count: 0 }

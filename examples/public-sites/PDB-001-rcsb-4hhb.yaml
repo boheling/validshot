@@ -1,0 +1,50 @@
+# Public-site DEMO (not evidence): RCSB PDB search and structure page for 4HHB.
+# Known answers come from the literature, not the site: 4HHB is human deoxyhaemoglobin
+# at 1.74 Å (Fermi, Perutz et al. 1984), two unique chains (α and β globin).
+protocol:
+  id: PDB-001
+  version: 1
+  title: RCSB PDB — find 4HHB and show its key facts; search response time
+  system: rcsb.org (public site)
+
+requirements:
+  R1: The home page loads with a search box.
+  R2: Searching for a PDB ID lists that entry with its title.
+  R3: The structure page shows the entry's title, resolution and number of unique protein chains.
+  R4: Search results appear within 10 seconds; the structure page within 10 seconds.
+
+environment:
+  base_url: https://www.rcsb.org
+  viewport: { width: 1280, height: 800 }
+  timezone: UTC
+  locale: en-US
+  action_timeout_ms: 20000
+  assert_timeout_ms: 5000
+
+steps:
+  - id: 1
+    req: R1
+    action: Open rcsb.org.
+    do: { goto: / }
+    expect:
+      - { target: "#search-bar-input-text", visible: true, within_ms: 10000 }
+
+  - id: 2
+    req: [R2, R4]
+    action: Search for 4HHB.
+    do:
+      - fill: { target: "#search-bar-input-text", value: "4HHB" }
+      - press: { target: "#search-bar-input-text", key: Enter }
+    expect:
+      - { target: { role: link, name: "4HHB", exact: true }, visible: true, within_ms: 10000 }
+      - { target: { role: link, name: "THE CRYSTAL STRUCTURE OF HUMAN DEOXYHAEMOGLOBIN AT 1.74 ANGSTROMS RESOLUTION", exact: true }, visible: true }
+
+  - id: 3
+    req: [R3, R4]
+    action: Open the 4HHB entry from the results.
+    do: { click: { role: link, name: "4HHB", exact: true } }
+    expect:
+      - { target: "#structureTitle", text: "THE CRYSTAL STRUCTURE OF HUMAN DEOXYHAEMOGLOBIN AT 1.74 ANGSTROMS RESOLUTION", within_ms: 10000 }
+      - { target: "#exp_header_0_diffraction_resolution", text: "Resolution: 1.74 Å" }
+      - { target: "#contentProteinChainCount", text: "Unique protein chains: 2" }
+      - { url: "/structure/4HHB" }
