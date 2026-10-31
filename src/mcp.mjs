@@ -1,6 +1,7 @@
 // MCP server (stdio) for coding agents. AUTHORING TOOLS ONLY: an agent can read the
-// guide, inspect pages, check a protocol and dry-run it. It cannot lock (approve) a
-// protocol or start a formal run: those are human acts, done with the CLI.
+// guide, inspect pages, check a protocol, dry-run it and render its review copy. It
+// cannot lock (approve) a protocol, start a formal run or build the summary report:
+// those are human acts, done with the CLI.
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
@@ -10,6 +11,7 @@ import { loadProtocol, formatCheck } from './protocol.mjs';
 import { verifyLock } from './lock.mjs';
 import { inspect } from './inspect.mjs';
 import { run } from './runner.mjs';
+import { renderProtocol } from './review.mjs';
 import { ROOT, TOOL_VERSION } from './version.mjs';
 
 const text = (t) => ({ type: 'text', text: t });
@@ -81,6 +83,22 @@ server.registerTool('dry_run', {
       ...failing.map((s) => image(path.join(r.dir, s.screenshot.annotated.path))),
     ] };
   } catch (e) { return fail(`dry run failed: ${e.message}`); }
+});
+
+server.registerTool('render_protocol', {
+  title: 'Render the review copy',
+  description: 'Render a protocol as a PDF laid out like a manual test script (requirements, steps, expected results, the exact YAML as an appendix), ' +
+    'for the person who reviews and locks it. The approved item stays the YAML file; the PDF carries its sha256. Run this when handing a protocol over for review.',
+  inputSchema: {
+    protocol: z.string().describe('Absolute path to the protocol YAML'),
+    out: z.string().optional().describe('Absolute path for the PDF (default: next to the protocol, <name>.review.pdf)'),
+  },
+}, async ({ protocol, out }) => {
+  try {
+    const r = await renderProtocol(abs(protocol), { out: out && abs(out) });
+    return { content: [text(`Review copy: ${r.file}\nProtocol sha256 ${r.hash}\n${r.lock.ok ? 'Locked (approved).' : `Not locked: ${r.lock.reason}`}` +
+      (r.warnings.length ? `\nPoints for the reviewer:\n- ${r.warnings.join('\n- ')}` : ''))] };
+  } catch (e) { return fail(`render failed: ${e.message}`); }
 });
 
 await server.connect(new StdioServerTransport());

@@ -23,6 +23,7 @@ nothing you produce in a dry run is evidence.
 | the page after steps 1..N | `inspect_page` (`protocol`, `after_step`) | `validshot inspect --protocol p.yaml --after-step N` |
 | validate after every edit | `check_protocol` | `validshot check p.yaml` |
 | execute without a lock | `dry_run` | `validshot run p.yaml --dry-run` |
+| review copy (PDF) for the reviewer | `render_protocol` | `validshot render p.yaml` |
 
 Pass absolute paths to MCP tools.
 
@@ -44,8 +45,10 @@ Pass absolute paths to MCP tools.
      change the expectation to match the app.** Report it to the user as a
      possible defect, quoting the requirement, the expected and actual values, and
      the screenshot.
-6. Hand over: tell the user that the protocol is ready for review, and give them
-   the commands to lock it and to run it formally (below).
+6. Hand over: `render_protocol` to produce the review copy. Then tell the user that
+   the protocol is ready for review: give them the PDF, the protocol's sha256, any
+   uncovered requirements or open questions, and the commands to lock it, run it
+   formally and build the summary report (below).
 
 ## Protocol format
 
@@ -160,9 +163,11 @@ the user that the requirements have a gap. Don't invent the expected behaviour.
 ## Handing over (tell the user)
 
 ```
+validshot render <protocol.yaml>             # review copy; the reviewer checks it and its sha256
 validshot lock <protocol.yaml> --approver "Reviewer Name" --reason "Initial approval"
 validshot run  <protocol.yaml> --initiator "Tester Name"
 validshot verify-run runs/<run-id>
+validshot report runs --title "<system> <version> — validation summary"
 ```
 
 Any edit to the protocol after locking makes the formal run refuse it until it is

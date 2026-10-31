@@ -61,7 +61,9 @@ export async function perform(page, a, { baseUrl, timeout = DEFAULTS.action_time
 
 const norm = (s) => (s ?? '').replace(/\s+/g, ' ').trim();
 
-export function describeAssertion(e) {
+// displayCheck: false leaves out the "displayed intact" clause, for documents that state
+// the rule once (the protocol review copy); the execution record always includes it
+export function describeAssertion(e, { displayCheck = true } = {}) {
   const within = e.within_ms !== undefined ? ` — within ${e.within_ms} ms of the step's last action` : '';
   if (e.url !== undefined) return (typeof e.url === 'string' ? `page URL contains "${e.url}"` : `page URL matches /${e.url.matches}/`) + within;
   if (e.title !== undefined) return `page title is "${e.title}"` + within;
@@ -76,7 +78,7 @@ export function describeAssertion(e) {
   if (e.enabled !== undefined) parts.push(e.enabled ? 'is enabled' : 'is disabled');
   if (e.checked !== undefined) parts.push(e.checked ? 'is checked' : 'is not checked');
   if (e.attribute) parts.push(`has ${e.attribute.name}="${e.attribute.value}"`);
-  if (wantsDisplayCheck(e)) parts.push('and is displayed intact (in view, not covered, not truncated)');
+  if (displayCheck && wantsDisplayCheck(e)) parts.push('and is displayed intact (in view, not covered, not truncated)');
   return `${t} ${parts.join(', ')}${e.within_ms !== undefined ? ` — within ${e.within_ms} ms of the step's last action` : ''}`;
 }
 

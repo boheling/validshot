@@ -41,7 +41,7 @@ npx playwright install chromium        # once, if not already cached
 validshot --help
 ```
 
-Pin the exact version in a validated setup (`npm install validshot@0.1.0`): the tool
+Pin the exact version in a validated setup (`npm install validshot@0.2.0`): the tool
 version goes on every record, and a version change needs its own assessment.
 
 ## Quick start (from a clone, with the example apps)
@@ -55,9 +55,11 @@ npm run ka-app                         # known-answer test app on :4173 (/good a
 
 validshot check   examples/ka-app/protocols/KA-001-order-form.yaml
 validshot run     examples/ka-app/protocols/KA-001-order-form.yaml --dry-run          # authoring, not evidence
+validshot render  examples/ka-app/protocols/KA-001-order-form.yaml                    # review copy (PDF) for the reviewer
 validshot lock    examples/ka-app/protocols/KA-001-order-form.yaml --approver "A. Reviewer" --reason "Initial approval"
 validshot run     examples/ka-app/protocols/KA-001-order-form.yaml --initiator "T. Tester"
 validshot verify-run runs/KA-001-<timestamp>-<id>
+validshot report  runs --title "Order form 1.4.2 — validation summary"                # summary over all formal runs
 ```
 
 (`validshot` = `node bin/validshot.mjs`, or `npm link` once.)
@@ -126,6 +128,32 @@ runs/KA-001-20261030T140110Z-534a/
 `validshot verify-run` re-hashes every file and walks the chain. A swapped
 screenshot, an edited or deleted log entry, or a changed record is reported.
 
+## Review copy and summary report
+
+The workflow is: draft, dry-run, **render**, review, lock, run, **report**.
+
+- `validshot render p.yaml` writes `p.review.pdf`, the protocol laid out like a manual
+  test script, for reviewers who don't read YAML. It contains:
+  - the requirements with their coverage, with gaps flagged;
+  - each step with its action in words and its expected results as numbered checks,
+    with notes;
+  - the execution rules, a review checklist and signature fields;
+  - the exact YAML as an appendix.
+
+  The approved item is still the YAML file. Every page carries its sha256, and the
+  sha256 the reviewer sees is the one `validshot lock` pins.
+- `validshot report <runs-dir|run-dir>...` writes a summary report over formal runs.
+  It contains:
+  - the results by protocol (most recent run) and requirement traceability;
+  - the full execution history, including failed and aborted runs;
+  - all deviations, with a column for the deviation-record reference;
+  - open items: earlier failures, uncovered requirements, overridden addresses,
+    differing system versions and evidence-integrity failures.
+
+  Every run's evidence is re-verified when the report is generated, and dry runs
+  are left out. The report draws no conclusion: section 7 is for the signatories.
+  The report directory is sealed like a run, so `validshot verify-run` works on it.
+
 ## Writing protocols
 
 The full YAML reference and edge-case checklist are in
@@ -148,16 +176,23 @@ The full YAML reference and edge-case checklist are in
 ### With a coding agent (MCP, authoring only)
 
 ```json
-{ "mcpServers": { "validshot": { "command": "npx", "args": ["-y", "validshot@0.1.0", "mcp"] } } }
+{ "mcpServers": { "validshot": { "command": "npx", "args": ["-y", "validshot@0.2.0", "mcp"] } } }
 ```
 
-Tools: `validshot_guide`, `inspect_page`, `check_protocol`, `dry_run`. For Claude
-Code, also copy `skills/validshot/` to `.claude/skills/validshot/`.
+Tools: `validshot_guide`, `inspect_page`, `check_protocol`, `dry_run`,
+`render_protocol`. There is no tool for lock, formal run or report. For Claude Code,
+also copy `skills/validshot/` to `.claude/skills/validshot/`.
 
 ## Status: v0.1 (M1 of the design + authoring loop)
 
-Done: Evidence Runner (M1), review & lock, agent authoring via MCP (M3, without the
-80 % acceptance metric measured), known-answer app and tests.
+Done:
+- Evidence Runner (M1);
+- review copy, lock and summary report;
+- agent authoring via MCP (M3; the 80 % acceptance metric has not been measured);
+- known-answer apps and tests;
+- a tool validation template pack in [docs/tool-validation/](docs/tool-validation/):
+  URS, risk assessment, IQ/OQ protocol based on known-answer testing, and known
+  limitations.
 
 Not done yet. Each of these needs to exist before validshot output can serve as
 formal evidence:
@@ -171,15 +206,19 @@ formal evidence:
   verified (the record says so).
 - **PDF/A** archival output, Word template import/fill-back (M2), traceability
   export to validation platforms (M6).
-- **Validation pack** (requirements spec, risk assessment, IQ/OQ) for the tool
-  itself (M6).
+- **An executed qualification.** The validation pack is a set of templates; each
+  organisation executes the IQ/OQ in its own environment (`npm run oq` writes
+  `oq-results.tap`). The [known limitations](docs/tool-validation/04-known-limitations.md)
+  include display-check gaps, such as overlays with `pointer-events: none`.
 - Determinism means the same protocol, tool version and system state give the same
   steps and verdicts. Screenshots are not guaranteed pixel-identical.
 
 ## Tests
 
 ```bash
-npm test     # unit, tamper detection, known-answer (good/bad app), MCP surface
+npm test     # unit, tamper detection, known-answer (good/bad apps), failure model,
+             # timing, display check, review copy, summary report, MCP surface
+npm run oq   # the same suite as OQ evidence: also writes oq-results.tap
 ```
 
 ## License

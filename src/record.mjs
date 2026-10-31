@@ -2,7 +2,7 @@
 // HTML, then to PDF by the same pinned Chromium. Signature blocks are for wet-ink
 // or the organisation's existing e-signature system (validshot has no Part 11 signing yet).
 
-const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+export const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const short = (h) => (h ? `${h.slice(0, 16)}…` : '');
 
 // annotated copy: the raw PNG as an image, with assertion boxes drawn on top.
@@ -21,7 +21,20 @@ export function annotatedHtml(raw, boxes, { dryRun, caption, width }) {
     `<div style="position:absolute;right:0;bottom:0;background:rgba(17,24,39,.85);color:#fff;font:12px/18px system-ui,sans-serif;padding:4px 10px">ANNOTATED COPY · ${esc(caption)}${dryRun ? ' · DRY RUN — NOT EVIDENCE' : ''}</div></body></html>`;
 }
 
-const badge = (r) => `<span class="badge ${r === 'PASS' ? 'pass' : r === 'FAIL' ? 'fail' : 'blocked'}">${r}</span>`;
+export const badge = (r) => `<span class="badge ${r === 'PASS' ? 'pass' : r === 'FAIL' ? 'fail' : 'blocked'}">${esc(r)}</span>`;
+
+// shared by the execution record, the protocol review copy and the summary report
+export const BASE_CSS = `
+  body{font:10.5px/1.45 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;color:#111;margin:0}
+  h1{font-size:18px;margin:0 0 2px} h2{font-size:13px;border-bottom:1.5px solid #111;padding-bottom:2px;margin:18px 0 6px;break-after:avoid}
+  h3{font-size:12px;margin:0 0 4px} table{border-collapse:collapse;width:100%;margin:4px 0} tr{break-inside:avoid}
+  th,td{border:1px solid #bbb;padding:3px 5px;text-align:left;vertical-align:top} th{background:#f2f2f2;width:22%}
+  .mono{font-family:ui-monospace,Menlo,monospace;font-size:8.5px;word-break:break-all} .meta{color:#444;font-size:9px;margin:3px 0}
+  .badge{display:inline-block;padding:0 6px;border-radius:3px;font-weight:700;font-size:9.5px;color:#fff;white-space:nowrap}
+  .pass{background:#15803d}.fail{background:#b91c1c}.blocked{background:#6b7280}
+  .note{color:#92400e;font-size:9.5px} .err{color:#b91c1c}
+  .sigs{display:flex;gap:18px;margin-top:10px;break-inside:avoid} .sig{flex:1;font-size:9.5px} .line{border-bottom:1px solid #111;height:34px;margin-bottom:3px}`;
+export const sig = (role) => `<div class="sig"><div class="line"></div><b>${esc(role)}</b><br>Name / signature / date</div>`;
 
 export function renderRecord(r) {
   const row = (k, v) => `<tr><th>${esc(k)}</th><td>${v}</td></tr>`;
@@ -46,23 +59,15 @@ export function renderRecord(r) {
       <img src="${esc(s.screenshot.annotated.path)}" alt="annotated screenshot of step ${esc(s.id)}">
       <p class="meta mono">raw ${esc(s.screenshot.raw.path)} sha256 ${esc(s.screenshot.raw.sha256)}<br>annotated ${esc(s.screenshot.annotated.path)} sha256 ${esc(s.screenshot.annotated.sha256)}${s.screenshot.extra.map((x) => `<br>A${x.assertion} capture ${esc(x.path)} sha256 ${esc(x.sha256)}`).join('')}</p></div>` : ''}
     </section>`).join('');
-  const sig = (role) => `<div class="sig"><div class="line"></div><b>${role}</b><br>Name / signature / date</div>`;
-  return `<!doctype html><html><head><meta charset="utf-8"><title>Execution record ${esc(r.run_id)}</title><style>
-  body{font:10.5px/1.45 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;color:#111;margin:0}
-  h1{font-size:18px;margin:0 0 2px} h2{font-size:13px;border-bottom:1.5px solid #111;padding-bottom:2px;margin:18px 0 6px}
-  h3{font-size:12px;margin:0 0 4px} table{border-collapse:collapse;width:100%;margin:4px 0}
-  th,td{border:1px solid #bbb;padding:3px 5px;text-align:left;vertical-align:top} th{background:#f2f2f2;width:22%}
+  return `<!doctype html><html><head><meta charset="utf-8"><title>Execution record ${esc(r.run_id)}</title><style>${BASE_CSS}
   .asserts th,.dev th{width:auto} .dev td:nth-child(1){width:44px;white-space:nowrap} .dev td:nth-child(2){width:62px} .dev td:last-child{width:52px} .asserts td:first-child{width:28px} .asserts td:last-child{width:62px}
-  .mono{font-family:ui-monospace,Menlo,monospace;font-size:8.5px;word-break:break-all} .meta{color:#444;font-size:9px;margin:3px 0}
-  .badge{display:inline-block;padding:0 6px;border-radius:3px;font-weight:700;font-size:9.5px;color:#fff}
-  .pass{background:#15803d}.fail{background:#b91c1c}.blocked{background:#6b7280}
-  .note{color:#92400e;font-size:9.5px} .req{font-weight:400;color:#444;font-size:10px} .err{color:#b91c1c}
+  .req{font-weight:400;color:#444;font-size:10px}
   .step{border:1px solid #ddd;padding:8px;margin:8px 0;border-radius:4px}
   /* a step may span pages (no half-empty page before a tall step); keep its heading with its table, rows whole, and the screenshot with its hashes */
   .step h3,.step>p{break-after:avoid} .step tr{break-inside:avoid} .shot{break-inside:avoid}
   .step img{max-width:100%;border:1px solid #999;display:block;margin-top:4px}
   .dry{border:3px solid #b91c1c;color:#b91c1c;font-weight:700;padding:6px;text-align:center;font-size:13px;margin-bottom:8px}
-  .verdict{font-size:14px;margin:6px 0} .sigs{display:flex;gap:18px;margin-top:10px} .sig{flex:1;font-size:9.5px} .line{border-bottom:1px solid #111;height:34px;margin-bottom:3px}
+  .verdict{font-size:14px;margin:6px 0}
   </style></head><body>
   ${r.dry_run ? '<div class="dry">DRY RUN — AUTHORING ONLY — NOT VALID AS VALIDATION EVIDENCE</div>' : ''}
   <h1>Execution record: ${esc(r.protocol.id)} v${esc(r.protocol.version)}</h1>

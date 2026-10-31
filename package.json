@@ -1,6 +1,6 @@
 {
   "name": "validshot",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Deterministic front-end validation runner: locked YAML protocols, raw screenshot evidence, SHA-256 hash-chained audit trail, signable execution records (PDF + JSON).",
   "author": "boheling <boheling@gmail.com>",
   "type": "module",
@@ -10,13 +10,15 @@
   "scripts": {
     "test": "node --test",
     "ka-app": "node examples/ka-app/server.mjs",
-    "stats-app": "node examples/stats-app/server.mjs"
+    "stats-app": "node examples/stats-app/server.mjs",
+    "oq": "node --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=tap --test-reporter-destination=oq-results.tap"
   },
   "files": [
     "bin",
     "src",
     "skills",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=22"

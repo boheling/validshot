@@ -1,4 +1,4 @@
-// Evidence store for one run: files are written once and never modified, every
+// Evidence store for one run (or one summary report): files are written once and never modified, every
 // event goes into an append-only audit log where each entry hashes the previous one,
 // and a manifest lists the SHA-256 of every file plus the chain head.
 //
@@ -14,7 +14,7 @@ const entryHash = (e) => sha256(JSON.stringify({ seq: e.seq, at: e.at, type: e.t
 export class EvidenceStore {
   constructor(dir) {
     if (fs.existsSync(dir)) throw new Error(`run directory already exists: ${dir}`);
-    fs.mkdirSync(path.join(dir, 'shots'), { recursive: true });
+    fs.mkdirSync(dir, { recursive: true });
     this.dir = dir;
     this.log = path.join(dir, 'audit.jsonl');
     this.seq = 0;

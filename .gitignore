@@ -3,3 +3,6 @@ runs/
 .validshot/
 .DS_Store
 *-login.json
+oq-results.tap
+reports/
+*.review.pdf

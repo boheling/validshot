@@ -13,6 +13,7 @@ import { verifyLock } from './lock.mjs';
 import { EvidenceStore } from './evidence.mjs';
 import { perform, evaluate, describeAction, describeAssertion, boxOf, resolveUrl, locatorFor } from './assert.mjs';
 import { renderRecord, annotatedHtml } from './record.mjs';
+import { toPdf } from './pdf.mjs';
 import { TOOL_VERSION, PLAYWRIGHT_VERSION } from './version.mjs';
 
 const stamp = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
@@ -86,7 +87,7 @@ export async function run(file, {
   try {
     meta.system_version = await resolveSystemVersion(context, doc, baseUrl, systemVersion);
     if (!meta.system_version && !dryRun) throw new Error('no system version: add system_version to the protocol, or pass --system-version (recorded as initiator-confirmed)');
-  } catch (e) { await browser.close(); store.event('run_aborted', { reason: e.message }); store.seal(); throw e; }
+  } catch (e) { await browser.close(); store.event('run_aborted', { run_id: runId, dry_run: dryRun, protocol: meta.protocol, initiator: meta.initiator, started_at: meta.started_at, reason: e.message }); store.seal(); throw e; }
   store.event('run_started', meta);
   log(`${dryRun ? 'DRY RUN' : 'Run'} ${runId} → ${dir}`);
 
@@ -166,13 +167,7 @@ export async function run(file, {
   store.put('record.json', Buffer.from(JSON.stringify(record, null, 2) + '\n'));
   const html = renderRecord(record);
   store.put('record.html', Buffer.from(html));
-  const pdfBrowser = await chromium.launch();
-  const pdfPage = await pdfBrowser.newPage();
-  await pdfPage.goto(`file://${path.join(dir, 'record.html')}`, { waitUntil: 'load' });
-  const pdf = await pdfPage.pdf({ format: 'A4', printBackground: true, margin: { top: '14mm', bottom: '16mm', left: '12mm', right: '12mm' },
-    displayHeaderFooter: true, headerTemplate: '<span></span>',
-    footerTemplate: `<div style="font-size:7px;width:100%;padding:0 12mm;display:flex;justify-content:space-between;color:#555"><span>${runId}${dryRun ? ' · DRY RUN — NOT VALID AS EVIDENCE' : ''}</span><span>page <span class="pageNumber"></span> of <span class="totalPages"></span></span></div>` });
-  await pdfBrowser.close();
+  const pdf = await toPdf({ url: `file://${path.join(dir, 'record.html')}`, footer: `${runId}${dryRun ? ' · DRY RUN — NOT VALID AS EVIDENCE' : ''}` });
   store.put('record.pdf', pdf);
   const sealed = store.seal();
   fs.writeFileSync(path.join(dir, 'manifest.sha256'), `${sealed.sha256}  manifest.json\n`);
