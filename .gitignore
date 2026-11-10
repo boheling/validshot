@@ -6,3 +6,6 @@ runs/
 oq-results.tap
 reports/
 *.review.pdf
+!docs/sample/runs/
+!docs/sample/reports/
+!docs/sample/*.review.pdf

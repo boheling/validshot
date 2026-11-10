@@ -1,0 +1,13 @@
+{
+  "protocol_id": "KA-001",
+  "protocol_version": 1,
+  "protocol_sha256": "6cf0f5327f2d9faf2ff1b193c835658b49864c1c445f0dc297f6154e4b0e4a5b",
+  "approved_by": "A. Reviewer",
+  "approver_role": "Reviewer",
+  "approved_at": "2026-11-10T15:47:35.041Z",
+  "reason": "Initial approval",
+  "host_user": "pwuser",
+  "tool_version": "0.2.0",
+  "meaning": "Reviewed and approved for execution. Not a 21 CFR Part 11 electronic signature.",
+  "supersedes": null
+}

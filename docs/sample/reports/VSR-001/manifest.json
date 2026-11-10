@@ -1,0 +1,13 @@
+{
+  "files": {
+    "report.html": "a98ff15a210028d412e807172650f25139921430d9f2d22157de65444ada44b1",
+    "report.json": "81c7416fc3e6c83ad86e5e0a393a4665638716eb1e5cef68bc1ae3765c63fd13",
+    "report.pdf": "f0bca81812cc0cebaca96087980231f30d58e29cc353b1852340223d6b6edaf2"
+  },
+  "audit_log": {
+    "path": "audit.jsonl",
+    "sha256": "1f28525f9a1ec79c883ee4be6fa56c4fa7aef16a39d06c653dfe59b282af08e7",
+    "entries": 6,
+    "chain_head": "3ff9de5234aa679f607d24f9d2f8b48d23cc87de4c315d6513fe9ef833dd3b38"
+  }
+}

@@ -1,0 +1,528 @@
+{
+  "run_id": "KA-001-20261110T154758Z-d544",
+  "dry_run": false,
+  "protocol": {
+    "id": "KA-001",
+    "version": 1,
+    "title": "Order entry form — display and input validation",
+    "sha256": "6cf0f5327f2d9faf2ff1b193c835658b49864c1c445f0dc297f6154e4b0e4a5b",
+    "file": "KA-001-order-form.yaml",
+    "source": null
+  },
+  "lock": {
+    "ok": true,
+    "approved_by": "A. Reviewer",
+    "approver_role": "Reviewer",
+    "approved_at": "2026-11-10T15:47:35.041Z",
+    "reason": "Initial approval",
+    "problem": null
+  },
+  "initiator": "T. Tester",
+  "base_url": "http://127.0.0.1:4173/good",
+  "base_url_overridden": null,
+  "environment": {
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "timezone": "UTC",
+    "locale": "en-US",
+    "action_timeout_ms": 5000,
+    "assert_timeout_ms": 2000,
+    "base_url": "http://127.0.0.1:4173/good",
+    "color_scheme": "light",
+    "reduced_motion": "reduce",
+    "device_scale_factor": 1
+  },
+  "tool": {
+    "validshot": "0.2.0",
+    "playwright": "1.64.0",
+    "browser": "chromium 156.0.8078.4",
+    "node": "v24.21.0",
+    "os": "Linux 6.8.0-100-generic arm64",
+    "host": "qa-runner-01"
+  },
+  "clock": "host system clock (UTC); NTP synchronisation not verified by validshot",
+  "started_at": "2026-11-10T15:47:58.631Z",
+  "system_version": {
+    "value": "1.4.2",
+    "source": "read from http://127.0.0.1:4173/good/version.json (field version)"
+  },
+  "finished_at": "2026-11-10T15:48:00.747Z",
+  "verdict": "PASS",
+  "counts": {
+    "PASS": 10,
+    "FAIL": 0,
+    "BLOCKED": 0
+  },
+  "requirements": {
+    "REQ-010": "The order page shows the selected product's full name, its stock status and unit price.",
+    "REQ-011": "The total equals quantity × unit price, rounded to the cent.",
+    "REQ-020": "Quantity accepts whole numbers from 1 to 99; anything else shows an error and disables ordering.",
+    "REQ-030": "Placing an order shows a confirmation with quantity and product."
+  },
+  "steps": [
+    {
+      "id": "1",
+      "req": [
+        "REQ-010"
+      ],
+      "source": null,
+      "action": "Open the order page.",
+      "expected_text": null,
+      "actions": [
+        "open /"
+      ],
+      "result": "PASS",
+      "error": null,
+      "assertions": [
+        {
+          "expected": "heading \"Order\" is visible, and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "visible, displayed intact",
+          "display_check": "on"
+        },
+        {
+          "expected": "field labelled \"Selected product\" shows exactly \"Standard reagent kit\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"Standard reagent kit\", displayed intact",
+          "display_check": "on"
+        },
+        {
+          "expected": "field labelled \"Stock status\" shows exactly \"In stock\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"In stock\", displayed intact",
+          "display_check": "on"
+        },
+        {
+          "expected": "field labelled \"Unit price\" shows exactly \"$12.50\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"$12.50\", displayed intact",
+          "display_check": "on"
+        },
+        {
+          "expected": "field labelled \"Total\" shows exactly \"$12.50\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"$12.50\", displayed intact",
+          "display_check": "on"
+        }
+      ],
+      "started_at": "2026-11-10T15:47:58.733Z",
+      "finished_at": "2026-11-10T15:47:59.058Z",
+      "url": "http://127.0.0.1:4173/good/",
+      "screenshot": {
+        "raw": {
+          "path": "shots/step-01.raw.png",
+          "sha256": "e6d95456b84fbccb0947ee5bdc90799628bf8c78de3f3ad2e2d2e0e521985cda"
+        },
+        "annotated": {
+          "path": "shots/step-01.annotated.png",
+          "sha256": "480aacc666332a333a1fb8675f98d9513ce55a955e86ee74a1cfbfbf785de053"
+        },
+        "extra": []
+      }
+    },
+    {
+      "id": "2",
+      "req": [
+        "REQ-010",
+        "REQ-011"
+      ],
+      "source": null,
+      "action": "Select the calibrator set and enter quantity 3.",
+      "expected_text": "The full product name is readable, the stock badge reads \"Low stock\", total is $569.97.",
+      "actions": [
+        "choose \"Extended-range calibrator set for high-throughput analyzers\" in field labelled \"Product\"",
+        "enter \"3\" into field labelled \"Quantity\""
+      ],
+      "result": "PASS",
+      "error": null,
+      "assertions": [
+        {
+          "expected": "field labelled \"Selected product\" shows exactly \"Extended-range calibrator set for high-throughput analyzers\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"Extended-range calibrator set for high-throughput analyzers\", displayed intact",
+          "display_check": "on"
+        },
+        {
+          "expected": "field labelled \"Stock status\" shows exactly \"Low stock\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"Low stock\", displayed intact",
+          "display_check": "on"
+        },
+        {
+          "expected": "field labelled \"Unit price\" shows exactly \"$189.99\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"$189.99\", displayed intact",
+          "display_check": "on"
+        },
+        {
+          "expected": "field labelled \"Total\" shows exactly \"$569.97\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"$569.97\", displayed intact",
+          "display_check": "on"
+        }
+      ],
+      "started_at": "2026-11-10T15:47:59.058Z",
+      "finished_at": "2026-11-10T15:47:59.307Z",
+      "url": "http://127.0.0.1:4173/good/",
+      "screenshot": {
+        "raw": {
+          "path": "shots/step-02.raw.png",
+          "sha256": "49eb33c343d100e828caaff47e75b6a9e32e582a009c63b7d74627f7be9f1fe6"
+        },
+        "annotated": {
+          "path": "shots/step-02.annotated.png",
+          "sha256": "49462bf530e1b07f5a81e6ea0598d887c407035ff7046ac3fcd6dd50026d5d84"
+        },
+        "extra": []
+      }
+    },
+    {
+      "id": "3",
+      "req": [
+        "REQ-020"
+      ],
+      "source": null,
+      "action": "Edge case, lower boundary: enter quantity 1.",
+      "expected_text": null,
+      "actions": [
+        "enter \"1\" into field labelled \"Quantity\""
+      ],
+      "result": "PASS",
+      "error": null,
+      "assertions": [
+        {
+          "expected": "alert shows exactly \"\"",
+          "pass": true,
+          "actual": "shows \"\"",
+          "display_check": "off: the error area is empty when there is no error"
+        },
+        {
+          "expected": "button \"Place order\" is enabled",
+          "pass": true,
+          "actual": "enabled",
+          "display_check": "n/a"
+        },
+        {
+          "expected": "field labelled \"Total\" shows exactly \"$189.99\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"$189.99\", displayed intact",
+          "display_check": "on"
+        }
+      ],
+      "started_at": "2026-11-10T15:47:59.307Z",
+      "finished_at": "2026-11-10T15:47:59.456Z",
+      "url": "http://127.0.0.1:4173/good/",
+      "screenshot": {
+        "raw": {
+          "path": "shots/step-03.raw.png",
+          "sha256": "dffa388ac6bc923827c53c65826ef48add925f8bc6b3adfe2169c927d70c7cc2"
+        },
+        "annotated": {
+          "path": "shots/step-03.annotated.png",
+          "sha256": "7e09c46a61470913043a21c4004f9c10d9cdd52ee7034b4480f5048eaaf8782b"
+        },
+        "extra": []
+      }
+    },
+    {
+      "id": "4",
+      "req": [
+        "REQ-020"
+      ],
+      "source": null,
+      "action": "Edge case, upper boundary: enter quantity 99.",
+      "expected_text": null,
+      "actions": [
+        "enter \"99\" into field labelled \"Quantity\""
+      ],
+      "result": "PASS",
+      "error": null,
+      "assertions": [
+        {
+          "expected": "button \"Place order\" is enabled",
+          "pass": true,
+          "actual": "enabled",
+          "display_check": "n/a"
+        },
+        {
+          "expected": "field labelled \"Total\" shows exactly \"$18809.01\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"$18809.01\", displayed intact",
+          "display_check": "on"
+        }
+      ],
+      "started_at": "2026-11-10T15:47:59.456Z",
+      "finished_at": "2026-11-10T15:47:59.588Z",
+      "url": "http://127.0.0.1:4173/good/",
+      "screenshot": {
+        "raw": {
+          "path": "shots/step-04.raw.png",
+          "sha256": "9e33cd4c348dfe2c6d1713558a12e01d69c536665fe10af19196b321f7ec9d64"
+        },
+        "annotated": {
+          "path": "shots/step-04.annotated.png",
+          "sha256": "aec5a97ce0dfe2cfd540e9749c00cfb3529c70b140abd159f685be89a58915e1"
+        },
+        "extra": []
+      }
+    },
+    {
+      "id": "5",
+      "req": [
+        "REQ-020"
+      ],
+      "source": null,
+      "action": "Edge case, below range: enter quantity 0.",
+      "expected_text": null,
+      "actions": [
+        "enter \"0\" into field labelled \"Quantity\""
+      ],
+      "result": "PASS",
+      "error": null,
+      "assertions": [
+        {
+          "expected": "alert shows exactly \"Quantity must be a whole number from 1 to 99\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"Quantity must be a whole number from 1 to 99\", displayed intact",
+          "display_check": "on"
+        },
+        {
+          "expected": "button \"Place order\" is disabled",
+          "pass": true,
+          "actual": "disabled",
+          "display_check": "n/a"
+        },
+        {
+          "expected": "field labelled \"Total\" shows exactly \"—\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"—\", displayed intact",
+          "display_check": "on"
+        }
+      ],
+      "started_at": "2026-11-10T15:47:59.588Z",
+      "finished_at": "2026-11-10T15:47:59.756Z",
+      "url": "http://127.0.0.1:4173/good/",
+      "screenshot": {
+        "raw": {
+          "path": "shots/step-05.raw.png",
+          "sha256": "660300fd7e1be8fdd1d8f6e0e5a526f28822d0fd73b2872474875649a2454f41"
+        },
+        "annotated": {
+          "path": "shots/step-05.annotated.png",
+          "sha256": "c5b9b3d11dc8e387e268bb221b055572d05b547171589a4d9e4527a16c6ca08f"
+        },
+        "extra": []
+      }
+    },
+    {
+      "id": "6",
+      "req": [
+        "REQ-020"
+      ],
+      "source": null,
+      "action": "Edge case, above range: enter quantity 100.",
+      "expected_text": null,
+      "actions": [
+        "enter \"100\" into field labelled \"Quantity\""
+      ],
+      "result": "PASS",
+      "error": null,
+      "assertions": [
+        {
+          "expected": "alert shows exactly \"Quantity must be a whole number from 1 to 99\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"Quantity must be a whole number from 1 to 99\", displayed intact",
+          "display_check": "on"
+        },
+        {
+          "expected": "button \"Place order\" is disabled",
+          "pass": true,
+          "actual": "disabled",
+          "display_check": "n/a"
+        }
+      ],
+      "started_at": "2026-11-10T15:47:59.756Z",
+      "finished_at": "2026-11-10T15:47:59.889Z",
+      "url": "http://127.0.0.1:4173/good/",
+      "screenshot": {
+        "raw": {
+          "path": "shots/step-06.raw.png",
+          "sha256": "e1ed58d7f639b486e47b38187975029fbca941ba4dd110b6be5a3ffdfa6e6b9d"
+        },
+        "annotated": {
+          "path": "shots/step-06.annotated.png",
+          "sha256": "2d293e4e18c125326109692167e12b2ec39e698cec5760e85ebd4b97003c7fd0"
+        },
+        "extra": []
+      }
+    },
+    {
+      "id": "7",
+      "req": [
+        "REQ-020"
+      ],
+      "source": null,
+      "action": "Edge case, not a number: enter \"abc\".",
+      "expected_text": null,
+      "actions": [
+        "enter \"abc\" into field labelled \"Quantity\""
+      ],
+      "result": "PASS",
+      "error": null,
+      "assertions": [
+        {
+          "expected": "alert shows exactly \"Quantity must be a whole number from 1 to 99\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"Quantity must be a whole number from 1 to 99\", displayed intact",
+          "display_check": "on"
+        },
+        {
+          "expected": "button \"Place order\" is disabled",
+          "pass": true,
+          "actual": "disabled",
+          "display_check": "n/a"
+        }
+      ],
+      "started_at": "2026-11-10T15:47:59.889Z",
+      "finished_at": "2026-11-10T15:48:00.175Z",
+      "url": "http://127.0.0.1:4173/good/",
+      "screenshot": {
+        "raw": {
+          "path": "shots/step-07.raw.png",
+          "sha256": "e223167eb9741734b9038024ab752a39f4126b379b848293eeda50e1dd6b342f"
+        },
+        "annotated": {
+          "path": "shots/step-07.annotated.png",
+          "sha256": "1aa0dfbe914d3b89155ea3604706a8073e6fe094dae69e9aad1845d31d4fe22d"
+        },
+        "extra": []
+      }
+    },
+    {
+      "id": "8",
+      "req": [
+        "REQ-020"
+      ],
+      "source": null,
+      "action": "Edge case, decimal: enter \"2.5\".",
+      "expected_text": null,
+      "actions": [
+        "enter \"2.5\" into field labelled \"Quantity\""
+      ],
+      "result": "PASS",
+      "error": null,
+      "assertions": [
+        {
+          "expected": "alert shows exactly \"Quantity must be a whole number from 1 to 99\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"Quantity must be a whole number from 1 to 99\", displayed intact",
+          "display_check": "on"
+        },
+        {
+          "expected": "button \"Place order\" is disabled",
+          "pass": true,
+          "actual": "disabled",
+          "display_check": "n/a"
+        }
+      ],
+      "started_at": "2026-11-10T15:48:00.175Z",
+      "finished_at": "2026-11-10T15:48:00.313Z",
+      "url": "http://127.0.0.1:4173/good/",
+      "screenshot": {
+        "raw": {
+          "path": "shots/step-08.raw.png",
+          "sha256": "52496cdd7ce18701ce8651b674eb2db7ae7ce0cf5669d03545bd084b14f103a2"
+        },
+        "annotated": {
+          "path": "shots/step-08.annotated.png",
+          "sha256": "9cdb989babffd39dd99edf6aa95c3c3ed0a83a19ef7565a6ce978b00fbaec335"
+        },
+        "extra": []
+      }
+    },
+    {
+      "id": "9",
+      "req": [
+        "REQ-020"
+      ],
+      "source": null,
+      "action": "Edge case, empty: clear the field.",
+      "expected_text": null,
+      "actions": [
+        "enter \"\" into field labelled \"Quantity\""
+      ],
+      "result": "PASS",
+      "error": null,
+      "assertions": [
+        {
+          "expected": "alert shows exactly \"Quantity must be a whole number from 1 to 99\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"Quantity must be a whole number from 1 to 99\", displayed intact",
+          "display_check": "on"
+        },
+        {
+          "expected": "button \"Place order\" is disabled",
+          "pass": true,
+          "actual": "disabled",
+          "display_check": "n/a"
+        }
+      ],
+      "started_at": "2026-11-10T15:48:00.313Z",
+      "finished_at": "2026-11-10T15:48:00.492Z",
+      "url": "http://127.0.0.1:4173/good/",
+      "screenshot": {
+        "raw": {
+          "path": "shots/step-09.raw.png",
+          "sha256": "ae6d941513e5997719e1d5dfc299d160f1b067ef174017f5e39f9c22d5ec57b7"
+        },
+        "annotated": {
+          "path": "shots/step-09.annotated.png",
+          "sha256": "f30768f782031137f8383fa031e5cecc58054905fddf263588ac19b1fb0adbc0"
+        },
+        "extra": []
+      }
+    },
+    {
+      "id": "10",
+      "req": [
+        "REQ-030"
+      ],
+      "source": null,
+      "action": "Enter quantity 2 and place the order.",
+      "expected_text": null,
+      "actions": [
+        "enter \"2\" into field labelled \"Quantity\"",
+        "click button \"Place order\""
+      ],
+      "result": "PASS",
+      "error": null,
+      "assertions": [
+        {
+          "expected": "field labelled \"Order confirmation\" shows exactly \"Order placed: 2 × Extended-range calibrator set for high-throughput analyzers\", and is displayed intact (in view, not covered, not truncated)",
+          "pass": true,
+          "actual": "shows \"Order placed: 2 × Extended-range calibrator set for high-throughput analyzers\", displayed intact",
+          "display_check": "on"
+        }
+      ],
+      "started_at": "2026-11-10T15:48:00.492Z",
+      "finished_at": "2026-11-10T15:48:00.724Z",
+      "url": "http://127.0.0.1:4173/good/",
+      "screenshot": {
+        "raw": {
+          "path": "shots/step-10.raw.png",
+          "sha256": "1a0023ae209e766e4adb4e5bc0f78fe584e6d97beff9e3ee7625c47ea5062741"
+        },
+        "annotated": {
+          "path": "shots/step-10.annotated.png",
+          "sha256": "6046b540bc155e5a003ad445ceaa228a04068cfbffeda41b0ddd78abac0e7eef"
+        },
+        "extra": []
+      }
+    }
+  ],
+  "console_errors": [],
+  "deviations": [],
+  "evidence_chain_head": "4c42c130d4708704dfd0d2aa7f038f51d24f2520fdb47071fe166ccf5c446d99"
+}

@@ -1,0 +1,186 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Execution record KA-001-20261110T154735Z-9a05</title><style>
+  body{font:10.5px/1.45 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;color:#111;margin:0}
+  h1{font-size:18px;margin:0 0 2px} h2{font-size:13px;border-bottom:1.5px solid #111;padding-bottom:2px;margin:18px 0 6px;break-after:avoid}
+  h3{font-size:12px;margin:0 0 4px} table{border-collapse:collapse;width:100%;margin:4px 0} tr{break-inside:avoid}
+  th,td{border:1px solid #bbb;padding:3px 5px;text-align:left;vertical-align:top} th{background:#f2f2f2;width:22%}
+  .mono{font-family:ui-monospace,Menlo,monospace;font-size:8.5px;word-break:break-all} .meta{color:#444;font-size:9px;margin:3px 0}
+  .badge{display:inline-block;padding:0 6px;border-radius:3px;font-weight:700;font-size:9.5px;color:#fff;white-space:nowrap}
+  .pass{background:#15803d}.fail{background:#b91c1c}.blocked{background:#6b7280}
+  .note{color:#92400e;font-size:9.5px} .err{color:#b91c1c}
+  .sigs{display:flex;gap:18px;margin-top:10px;break-inside:avoid} .sig{flex:1;font-size:9.5px} .line{border-bottom:1px solid #111;height:34px;margin-bottom:3px}
+  .asserts th,.dev th{width:auto} .dev td:nth-child(1){width:44px;white-space:nowrap} .dev td:nth-child(2){width:62px} .dev td:last-child{width:52px} .asserts td:first-child{width:28px} .asserts td:last-child{width:62px}
+  .req{font-weight:400;color:#444;font-size:10px}
+  .step{border:1px solid #ddd;padding:8px;margin:8px 0;border-radius:4px}
+  /* a step may span pages (no half-empty page before a tall step); keep its heading with its table, rows whole, and the screenshot with its hashes */
+  .step h3,.step>p{break-after:avoid} .step tr{break-inside:avoid} .shot{break-inside:avoid}
+  .step img{max-width:100%;border:1px solid #999;display:block;margin-top:4px}
+  .dry{border:3px solid #b91c1c;color:#b91c1c;font-weight:700;padding:6px;text-align:center;font-size:13px;margin-bottom:8px}
+  .verdict{font-size:14px;margin:6px 0}
+  </style></head><body>
+  
+  <h1>Execution record: KA-001 v1</h1>
+  <div>Order entry form — display and input validation</div>
+  <p class="verdict">Overall result: <span class="badge fail">FAIL</span> &nbsp; 5 pass · 5 fail · 0 blocked of 10 steps</p>
+  <h2>1. Execution details</h2><table>
+    <tr><th>Run ID</th><td><span class="mono">KA-001-20261110T154735Z-9a05</span></td></tr>
+    <tr><th>Protocol</th><td>KA-001-order-form.yaml · sha256 <span class="mono">6cf0f5327f2d9faf2ff1b193c835658b49864c1c445f0dc297f6154e4b0e4a5b</span></td></tr>
+    
+    <tr><th>Protocol approval</th><td>A. Reviewer (Reviewer), 2026-11-10T15:47:35.041Z — Initial approval. Review approval; not a Part 11 signature.</td></tr>
+    <tr><th>System under test</th><td>http://127.0.0.1:4173/bad <span class="err">(overridden at start; protocol says http://127.0.0.1:4173/good)</span></td></tr>
+    <tr><th>System version</th><td>1.4.2 — read from http://127.0.0.1:4173/bad/version.json (field version)</td></tr>
+    <tr><th>Initiated by</th><td>T. Tester</td></tr>
+    <tr><th>Started / finished</th><td>2026-11-10T15:47:35.263Z → 2026-11-10T15:47:56.129Z · host system clock (UTC); NTP synchronisation not verified by validshot</td></tr>
+    <tr><th>Environment</th><td>viewport 1280×800, scale 1, timezone UTC, locale en-US, light scheme, reduced motion; action timeout 5000 ms, assertion timeout 2000 ms, no automatic retries</td></tr>
+    <tr><th>Execution tool</th><td>validshot 0.2.0, Playwright 1.64.0, chromium 156.0.8078.4, Node v24.21.0, Linux 6.8.0-100-generic arm64, host qa-runner-01</td></tr>
+    <tr><th>Evidence chain head</th><td><span class="mono">4bbb6649eb86256f052ffb1b7b1ffb229e32f8af20e0905ab87cfe69ce1cf83b</span> (audit.jsonl at the time this record was generated; verify with <span class="mono">validshot verify-run</span>)</td></tr>
+  </table>
+  <h2>2. Requirement traceability</h2><table class="asserts"><tr><th>Requirement</th><th>Text</th><th>Steps</th><th>Result</th></tr><tr><td>REQ-010</td><td>The order page shows the selected product's full name, its stock status and unit price.</td><td>1, 2</td><td><span class="badge fail">FAIL</span></td></tr><tr><td>REQ-011</td><td>The total equals quantity × unit price, rounded to the cent.</td><td>2</td><td><span class="badge fail">FAIL</span></td></tr><tr><td>REQ-020</td><td>Quantity accepts whole numbers from 1 to 99; anything else shows an error and disables ordering.</td><td>3, 4, 5, 6, 7, 8, 9</td><td><span class="badge fail">FAIL</span></td></tr><tr><td>REQ-030</td><td>Placing an order shows a confirmation with quantity and product.</td><td>10</td><td><span class="badge pass">PASS</span></td></tr></table>
+  <h2>3. Deviations</h2>
+  <table class="dev"><tr><th>Step</th><th>Req</th><th>Expected</th><th>Actual</th><th>Result</th></tr><tr><td>1 A3</td><td>REQ-010</td><td>field labelled &quot;Stock status&quot; shows exactly &quot;In stock&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;In stock&quot;, display: is covered by &lt;div#promo&gt;</td><td><span class="badge fail">FAIL</span></td></tr><tr><td>2 A1</td><td>REQ-010, REQ-011</td><td>field labelled &quot;Selected product&quot; shows exactly &quot;Extended-range calibrator set for high-throughput analyzers&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;Extended-range calibrator set for high-throughput analyzers&quot;, display: text is cut off horizontally (463px of content in 360px)</td><td><span class="badge fail">FAIL</span></td></tr><tr><td>2 A2</td><td>REQ-010, REQ-011</td><td>field labelled &quot;Stock status&quot; shows exactly &quot;Low stock&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;Low stock&quot;, display: is covered by &lt;div#promo&gt;</td><td><span class="badge fail">FAIL</span></td></tr><tr><td>2 A4</td><td>REQ-010, REQ-011</td><td>field labelled &quot;Total&quot; shows exactly &quot;$569.97&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;$569.90&quot;, displayed intact</td><td><span class="badge fail">FAIL</span></td></tr><tr><td>3 A3</td><td>REQ-020</td><td>field labelled &quot;Total&quot; shows exactly &quot;$189.99&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;$189.90&quot;, displayed intact</td><td><span class="badge fail">FAIL</span></td></tr><tr><td>4 A2</td><td>REQ-020</td><td>field labelled &quot;Total&quot; shows exactly &quot;$18809.01&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;$18809.00&quot;, displayed intact</td><td><span class="badge fail">FAIL</span></td></tr><tr><td>5 A1</td><td>REQ-020</td><td>alert shows exactly &quot;Quantity must be a whole number from 1 to 99&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;&quot;, displayed intact</td><td><span class="badge fail">FAIL</span></td></tr><tr><td>5 A2</td><td>REQ-020</td><td>button &quot;Place order&quot; is disabled</td><td>enabled</td><td><span class="badge fail">FAIL</span></td></tr><tr><td>5 A3</td><td>REQ-020</td><td>field labelled &quot;Total&quot; shows exactly &quot;—&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;$0.00&quot;, displayed intact</td><td><span class="badge fail">FAIL</span></td></tr></table><p class="meta">Each deviation needs a deviation record. A re-execution gets a new run ID; this record is kept unchanged.</p>
+  
+  <h2>4. Steps</h2>
+  <p class="meta">Each step shows the annotated copy (boxes = assertion targets). The raw screenshot is stored unmodified next to it; both hashes are listed and recorded in the audit trail.</p>
+  
+    <section class="step">
+      <h3>Step 1 <span class="badge fail">FAIL</span> <span class="req">REQ-010</span></h3>
+      <p><b>Action:</b> Open the order page.<br><span class="mono">open /</span></p>
+      
+      
+      
+      <table class="asserts"><tr><th>#</th><th>Expected</th><th>Actual</th><th>Result</th></tr>
+        <tr><td>A1</td><td>heading &quot;Order&quot; is visible, and is displayed intact (in view, not covered, not truncated)</td><td>visible, displayed intact</td><td><span class="badge pass">PASS</span></td></tr><tr><td>A2</td><td>field labelled &quot;Selected product&quot; shows exactly &quot;Standard reagent kit&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;Standard reagent kit&quot;, displayed intact</td><td><span class="badge pass">PASS</span></td></tr><tr><td>A3</td><td>field labelled &quot;Stock status&quot; shows exactly &quot;In stock&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;In stock&quot;, display: is covered by &lt;div#promo&gt;</td><td><span class="badge fail">FAIL</span></td></tr><tr><td>A4</td><td>field labelled &quot;Unit price&quot; shows exactly &quot;$12.50&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;$12.50&quot;, displayed intact</td><td><span class="badge pass">PASS</span></td></tr><tr><td>A5</td><td>field labelled &quot;Total&quot; shows exactly &quot;$12.50&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;$12.50&quot;, displayed intact</td><td><span class="badge pass">PASS</span></td></tr>
+      </table>
+      <div class="shot">
+      <p class="meta">Executed 2026-11-10T15:47:35.360Z → 2026-11-10T15:47:37.815Z · URL http://127.0.0.1:4173/bad/</p>
+      <img src="shots/step-01.annotated.png" alt="annotated screenshot of step 1">
+      <p class="meta mono">raw shots/step-01.raw.png sha256 6eb13dc0a6995b35bd1807e89c498f9aa64dfcf9bc83369e7f9507e3836137cd<br>annotated shots/step-01.annotated.png sha256 f2908a584e9003caee7c450d48d6439de07972743f057df48b87430293e156ae</p></div>
+    </section>
+    <section class="step">
+      <h3>Step 2 <span class="badge fail">FAIL</span> <span class="req">REQ-010, REQ-011</span></h3>
+      <p><b>Action:</b> Select the calibrator set and enter quantity 3.<br><span class="mono">choose &quot;Extended-range calibrator set for high-throughput analyzers&quot; in field labelled &quot;Product&quot; → enter &quot;3&quot; into field labelled &quot;Quantity&quot;</span></p>
+      <p><b>Expected (protocol text):</b> The full product name is readable, the stock badge reads &quot;Low stock&quot;, total is $569.97.</p>
+      
+      
+      <table class="asserts"><tr><th>#</th><th>Expected</th><th>Actual</th><th>Result</th></tr>
+        <tr><td>A1</td><td>field labelled &quot;Selected product&quot; shows exactly &quot;Extended-range calibrator set for high-throughput analyzers&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;Extended-range calibrator set for high-throughput analyzers&quot;, display: text is cut off horizontally (463px of content in 360px)</td><td><span class="badge fail">FAIL</span></td></tr><tr><td>A2</td><td>field labelled &quot;Stock status&quot; shows exactly &quot;Low stock&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;Low stock&quot;, display: is covered by &lt;div#promo&gt;</td><td><span class="badge fail">FAIL</span></td></tr><tr><td>A3</td><td>field labelled &quot;Unit price&quot; shows exactly &quot;$189.99&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;$189.99&quot;, displayed intact</td><td><span class="badge pass">PASS</span></td></tr><tr><td>A4</td><td>field labelled &quot;Total&quot; shows exactly &quot;$569.97&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;$569.90&quot;, displayed intact</td><td><span class="badge fail">FAIL</span></td></tr>
+      </table>
+      <div class="shot">
+      <p class="meta">Executed 2026-11-10T15:47:37.815Z → 2026-11-10T15:47:44.457Z · URL http://127.0.0.1:4173/bad/</p>
+      <img src="shots/step-02.annotated.png" alt="annotated screenshot of step 2">
+      <p class="meta mono">raw shots/step-02.raw.png sha256 5ede635dfa52a34869e50809fed2bcc7bca57ae9076251ebfe8878cf6493ad34<br>annotated shots/step-02.annotated.png sha256 fbe784c9509721230b4ac6020f2ca4196530693c07ca090d7732d8833fe1a881</p></div>
+    </section>
+    <section class="step">
+      <h3>Step 3 <span class="badge fail">FAIL</span> <span class="req">REQ-020</span></h3>
+      <p><b>Action:</b> Edge case, lower boundary: enter quantity 1.<br><span class="mono">enter &quot;1&quot; into field labelled &quot;Quantity&quot;</span></p>
+      
+      
+      
+      <table class="asserts"><tr><th>#</th><th>Expected</th><th>Actual</th><th>Result</th></tr>
+        <tr><td>A1</td><td>alert shows exactly &quot;&quot;</td><td>shows &quot;&quot;</td><td><span class="badge pass">PASS</span></td></tr><tr><td>A2</td><td>button &quot;Place order&quot; is enabled</td><td>enabled</td><td><span class="badge pass">PASS</span></td></tr><tr><td>A3</td><td>field labelled &quot;Total&quot; shows exactly &quot;$189.99&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;$189.90&quot;, displayed intact</td><td><span class="badge fail">FAIL</span></td></tr>
+      </table>
+      <div class="shot">
+      <p class="meta">Executed 2026-11-10T15:47:44.458Z → 2026-11-10T15:47:46.747Z · URL http://127.0.0.1:4173/bad/</p>
+      <img src="shots/step-03.annotated.png" alt="annotated screenshot of step 3">
+      <p class="meta mono">raw shots/step-03.raw.png sha256 1969ddb6337adb4c054509e9116b8c672f4a495d01ff2f7db2c08b085655f566<br>annotated shots/step-03.annotated.png sha256 4ee3fb2f8777ad7e61dfa1540d1aee5ac5e70f02a50aa28023e3072ddaedd359</p></div>
+    </section>
+    <section class="step">
+      <h3>Step 4 <span class="badge fail">FAIL</span> <span class="req">REQ-020</span></h3>
+      <p><b>Action:</b> Edge case, upper boundary: enter quantity 99.<br><span class="mono">enter &quot;99&quot; into field labelled &quot;Quantity&quot;</span></p>
+      
+      
+      
+      <table class="asserts"><tr><th>#</th><th>Expected</th><th>Actual</th><th>Result</th></tr>
+        <tr><td>A1</td><td>button &quot;Place order&quot; is enabled</td><td>enabled</td><td><span class="badge pass">PASS</span></td></tr><tr><td>A2</td><td>field labelled &quot;Total&quot; shows exactly &quot;$18809.01&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;$18809.00&quot;, displayed intact</td><td><span class="badge fail">FAIL</span></td></tr>
+      </table>
+      <div class="shot">
+      <p class="meta">Executed 2026-11-10T15:47:46.747Z → 2026-11-10T15:47:48.921Z · URL http://127.0.0.1:4173/bad/</p>
+      <img src="shots/step-04.annotated.png" alt="annotated screenshot of step 4">
+      <p class="meta mono">raw shots/step-04.raw.png sha256 51ada7d1e8c1cc81714b052112512cc57f5ec0164d7966238fb82e1a9af9acb6<br>annotated shots/step-04.annotated.png sha256 3523d83fc2966e50b65c5d3555d7b2e25afa27a98a8559ec0dbe0411b2381acd</p></div>
+    </section>
+    <section class="step">
+      <h3>Step 5 <span class="badge fail">FAIL</span> <span class="req">REQ-020</span></h3>
+      <p><b>Action:</b> Edge case, below range: enter quantity 0.<br><span class="mono">enter &quot;0&quot; into field labelled &quot;Quantity&quot;</span></p>
+      
+      
+      
+      <table class="asserts"><tr><th>#</th><th>Expected</th><th>Actual</th><th>Result</th></tr>
+        <tr><td>A1</td><td>alert shows exactly &quot;Quantity must be a whole number from 1 to 99&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;&quot;, displayed intact</td><td><span class="badge fail">FAIL</span></td></tr><tr><td>A2</td><td>button &quot;Place order&quot; is disabled</td><td>enabled</td><td><span class="badge fail">FAIL</span></td></tr><tr><td>A3</td><td>field labelled &quot;Total&quot; shows exactly &quot;—&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;$0.00&quot;, displayed intact</td><td><span class="badge fail">FAIL</span></td></tr>
+      </table>
+      <div class="shot">
+      <p class="meta">Executed 2026-11-10T15:47:48.921Z → 2026-11-10T15:47:55.197Z · URL http://127.0.0.1:4173/bad/</p>
+      <img src="shots/step-05.annotated.png" alt="annotated screenshot of step 5">
+      <p class="meta mono">raw shots/step-05.raw.png sha256 8d36e7d6f951c56700095f663f71ab7110b3bebfc923dcbe5c48e40f16468474<br>annotated shots/step-05.annotated.png sha256 e03469d025e4ce5b69d3a7dd5c7ee5d4c4b6d0002e11a61c2be05281d371184c</p></div>
+    </section>
+    <section class="step">
+      <h3>Step 6 <span class="badge pass">PASS</span> <span class="req">REQ-020</span></h3>
+      <p><b>Action:</b> Edge case, above range: enter quantity 100.<br><span class="mono">enter &quot;100&quot; into field labelled &quot;Quantity&quot;</span></p>
+      
+      
+      
+      <table class="asserts"><tr><th>#</th><th>Expected</th><th>Actual</th><th>Result</th></tr>
+        <tr><td>A1</td><td>alert shows exactly &quot;Quantity must be a whole number from 1 to 99&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;Quantity must be a whole number from 1 to 99&quot;, displayed intact</td><td><span class="badge pass">PASS</span></td></tr><tr><td>A2</td><td>button &quot;Place order&quot; is disabled</td><td>disabled</td><td><span class="badge pass">PASS</span></td></tr>
+      </table>
+      <div class="shot">
+      <p class="meta">Executed 2026-11-10T15:47:55.197Z → 2026-11-10T15:47:55.372Z · URL http://127.0.0.1:4173/bad/</p>
+      <img src="shots/step-06.annotated.png" alt="annotated screenshot of step 6">
+      <p class="meta mono">raw shots/step-06.raw.png sha256 3f823d8aab00764770e3e4469f2c62d5691d705b3f1a31862f620e3aadc05f5e<br>annotated shots/step-06.annotated.png sha256 cbb9a54e6c1171ebee40f09ce211ec8bef431793124cb83577ab80daa59a3a89</p></div>
+    </section>
+    <section class="step">
+      <h3>Step 7 <span class="badge pass">PASS</span> <span class="req">REQ-020</span></h3>
+      <p><b>Action:</b> Edge case, not a number: enter &quot;abc&quot;.<br><span class="mono">enter &quot;abc&quot; into field labelled &quot;Quantity&quot;</span></p>
+      
+      
+      
+      <table class="asserts"><tr><th>#</th><th>Expected</th><th>Actual</th><th>Result</th></tr>
+        <tr><td>A1</td><td>alert shows exactly &quot;Quantity must be a whole number from 1 to 99&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;Quantity must be a whole number from 1 to 99&quot;, displayed intact</td><td><span class="badge pass">PASS</span></td></tr><tr><td>A2</td><td>button &quot;Place order&quot; is disabled</td><td>disabled</td><td><span class="badge pass">PASS</span></td></tr>
+      </table>
+      <div class="shot">
+      <p class="meta">Executed 2026-11-10T15:47:55.372Z → 2026-11-10T15:47:55.507Z · URL http://127.0.0.1:4173/bad/</p>
+      <img src="shots/step-07.annotated.png" alt="annotated screenshot of step 7">
+      <p class="meta mono">raw shots/step-07.raw.png sha256 8c64cab6b1a04b1b231fccf753f5088f114d4b4001fe9d2672ab3d4c6912921e<br>annotated shots/step-07.annotated.png sha256 e96f86ba4cd7695c489f3281084c6f743eb73ea8c1eaf1fe022049afeaf14d56</p></div>
+    </section>
+    <section class="step">
+      <h3>Step 8 <span class="badge pass">PASS</span> <span class="req">REQ-020</span></h3>
+      <p><b>Action:</b> Edge case, decimal: enter &quot;2.5&quot;.<br><span class="mono">enter &quot;2.5&quot; into field labelled &quot;Quantity&quot;</span></p>
+      
+      
+      
+      <table class="asserts"><tr><th>#</th><th>Expected</th><th>Actual</th><th>Result</th></tr>
+        <tr><td>A1</td><td>alert shows exactly &quot;Quantity must be a whole number from 1 to 99&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;Quantity must be a whole number from 1 to 99&quot;, displayed intact</td><td><span class="badge pass">PASS</span></td></tr><tr><td>A2</td><td>button &quot;Place order&quot; is disabled</td><td>disabled</td><td><span class="badge pass">PASS</span></td></tr>
+      </table>
+      <div class="shot">
+      <p class="meta">Executed 2026-11-10T15:47:55.508Z → 2026-11-10T15:47:55.764Z · URL http://127.0.0.1:4173/bad/</p>
+      <img src="shots/step-08.annotated.png" alt="annotated screenshot of step 8">
+      <p class="meta mono">raw shots/step-08.raw.png sha256 7a52d70c847ec137a5018812b5c4e129f41e67548da30af3abd32272bef07c54<br>annotated shots/step-08.annotated.png sha256 ab758ecca4a53ba94ab12d6e7e48ea0c87ca60708eb2c35c73f89c84ec6fd98a</p></div>
+    </section>
+    <section class="step">
+      <h3>Step 9 <span class="badge pass">PASS</span> <span class="req">REQ-020</span></h3>
+      <p><b>Action:</b> Edge case, empty: clear the field.<br><span class="mono">enter &quot;&quot; into field labelled &quot;Quantity&quot;</span></p>
+      
+      
+      
+      <table class="asserts"><tr><th>#</th><th>Expected</th><th>Actual</th><th>Result</th></tr>
+        <tr><td>A1</td><td>alert shows exactly &quot;Quantity must be a whole number from 1 to 99&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;Quantity must be a whole number from 1 to 99&quot;, displayed intact</td><td><span class="badge pass">PASS</span></td></tr><tr><td>A2</td><td>button &quot;Place order&quot; is disabled</td><td>disabled</td><td><span class="badge pass">PASS</span></td></tr>
+      </table>
+      <div class="shot">
+      <p class="meta">Executed 2026-11-10T15:47:55.764Z → 2026-11-10T15:47:55.906Z · URL http://127.0.0.1:4173/bad/</p>
+      <img src="shots/step-09.annotated.png" alt="annotated screenshot of step 9">
+      <p class="meta mono">raw shots/step-09.raw.png sha256 398a2b37ece0f4236bf3795fb230d0da007e7300894b5240984bad2c61834559<br>annotated shots/step-09.annotated.png sha256 bdd0655082bc252e590a04e14afe95f3ed7749dac1a6f03c0f1669605678a458</p></div>
+    </section>
+    <section class="step">
+      <h3>Step 10 <span class="badge pass">PASS</span> <span class="req">REQ-030</span></h3>
+      <p><b>Action:</b> Enter quantity 2 and place the order.<br><span class="mono">enter &quot;2&quot; into field labelled &quot;Quantity&quot; → click button &quot;Place order&quot;</span></p>
+      
+      
+      
+      <table class="asserts"><tr><th>#</th><th>Expected</th><th>Actual</th><th>Result</th></tr>
+        <tr><td>A1</td><td>field labelled &quot;Order confirmation&quot; shows exactly &quot;Order placed: 2 × Extended-range calibrator set for high-throughput analyzers&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;Order placed: 2 × Extended-range calibrator set for high-throughput analyzers&quot;, displayed intact</td><td><span class="badge pass">PASS</span></td></tr>
+      </table>
+      <div class="shot">
+      <p class="meta">Executed 2026-11-10T15:47:55.907Z → 2026-11-10T15:47:56.094Z · URL http://127.0.0.1:4173/bad/</p>
+      <img src="shots/step-10.annotated.png" alt="annotated screenshot of step 10">
+      <p class="meta mono">raw shots/step-10.raw.png sha256 7e355929f4df77c46033d9e04ce7f1599cd699f64de449fa8b75f5708601ea91<br>annotated shots/step-10.annotated.png sha256 35ddac74bca7a93f6729b6c7ab546227857725c593c0b995aaba1f64e96c92b7</p></div>
+    </section>
+  <h2>5. Review and approval</h2>
+  <div class="sigs"><div class="sig"><div class="line"></div><b>Executed (initiated) by</b><br>Name / signature / date</div><div class="sig"><div class="line"></div><b>Reviewed by</b><br>Name / signature / date</div><div class="sig"><div class="line"></div><b>Approved by</b><br>Name / signature / date</div></div>
+  </body></html>

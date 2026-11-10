@@ -2,16 +2,48 @@
 
 Deterministic front-end validation with evidence an auditor can sign.
 
-A **protocol** (YAML) lists steps: what a tester does, the requirement it covers,
-and what must be displayed. validshot executes it in a pinned Chromium and produces,
-for every step, the **raw screenshot** (never modified), an **annotated copy** with
-each assertion boxed pass/fail, **expected vs actual** for every check, and an
-**execution record** (PDF + JSON) with requirement traceability, deviations and
-signature blocks. Every file is SHA-256 hashed into an append-only, hash-chained
-audit log.
+In regulated software (medical devices, pharma, other GxP systems), display checks
+are often still done by hand: follow a test script, take a screenshot, paste it into
+a document, compare it with the expected value, sign. validshot does the clicking,
+the screenshots and the comparisons. People still write, approve and sign.
 
-Built for regulated software (IEC 62304 / SaMD, GxP CSV/CSA, GAMP 5) where front-end
-display checks are still done by hand: screenshot, paste, compare, sign. Design
+![Step 2 of a sample execution record: three of four checks fail](docs/sample/img/record-step-2-fail.png)
+
+*Step 2 of a [sample execution record](docs/sample/runs/KA-001-20261110T154735Z-9a05/record.pdf),
+run against a test app with planted defects. The stock badge's DOM text is the
+expected "Low stock", but a banner covers it, so the check fails: a tester looking
+at the screen couldn't read it either. The product name is cut off, and the total
+is $569.90 where 3 × $189.99 = $569.97.*
+
+## What you get
+
+A **protocol** (YAML) lists steps: what a tester does, the requirement it covers,
+and what must be displayed. validshot executes it in a pinned Chromium and produces
+three kinds of document. All of them are in [docs/sample/](docs/sample/), generated
+from the example protocol and unedited.
+
+**1. A review copy for the approver** ([PDF](docs/sample/KA-001-order-form.review.pdf)).
+The protocol laid out like a manual test script, for reviewers who don't read YAML.
+Approval (`validshot lock`) pins the protocol's exact bytes.
+
+![Review copy: test steps with requirements, actions and numbered expected results](docs/sample/img/review-copy.png)
+
+**2. An execution record for every run**
+([FAIL](docs/sample/runs/KA-001-20261110T154735Z-9a05/record.pdf),
+[PASS](docs/sample/runs/KA-001-20261110T154758Z-d544/record.pdf)). For every step:
+the **raw screenshot** (never modified), an **annotated copy** with each check boxed
+pass/fail, and **expected vs actual** for every check, as in the image above. The
+record (PDF + JSON) also holds requirement traceability, deviations and signature
+blocks. Every file is SHA-256 hashed into an append-only, hash-chained audit log.
+
+**3. A summary report over all formal runs** ([PDF](docs/sample/reports/VSR-001/report.pdf)).
+Results by protocol, traceability, the full execution history including failed
+runs, every deviation, and open items. Each run's evidence is re-verified when the
+report is generated.
+
+![Summary report: results by protocol, open items, traceability and execution history](docs/sample/img/summary-report.png)
+
+Built for regulated software (IEC 62304 / SaMD, GxP CSV/CSA, GAMP 5). Design
 rationale: [docs/design.md](docs/design.md).
 
 ## Principles
@@ -74,7 +106,8 @@ validshot run examples/ka-app/protocols/KA-001-order-form.yaml --initiator "T. T
 It fails on exactly the planted defects: a total truncated to 10 cents, quantity 0
 accepted, a stock badge covered by a promo banner, and a truncated product name. The
 last two have correct DOM text. `test/known-answer.test.mjs` asserts this, and it is
-the starting point for the tool's own OQ.
+the starting point for the tool's own OQ. The output of these commands is in
+[docs/sample/](docs/sample/), with a table of which check caught which defect.
 
 ## Example: converting a manual Excel test script
 
@@ -113,8 +146,10 @@ version. Respect each site's terms and run them occasionally, never in a loop.
 
 ## What a run produces
 
+A real one: [docs/sample/runs/KA-001-20261110T154735Z-9a05/](docs/sample/runs/KA-001-20261110T154735Z-9a05/).
+
 ```
-runs/KA-001-20261030T140110Z-534a/
+runs/KA-001-20261110T154735Z-9a05/
   protocol.yaml            exact bytes that were executed
   protocol.lock.json       who approved them, when, why
   shots/step-01.raw.png    as captured (read-only)
@@ -183,7 +218,7 @@ Tools: `validshot_guide`, `inspect_page`, `check_protocol`, `dry_run`,
 `render_protocol`. There is no tool for lock, formal run or report. For Claude Code,
 also copy `skills/validshot/` to `.claude/skills/validshot/`.
 
-## Status: v0.1 (M1 of the design + authoring loop)
+## Status: 0.2.0 (M1 of the design + authoring loop)
 
 Done:
 - Evidence Runner (M1);

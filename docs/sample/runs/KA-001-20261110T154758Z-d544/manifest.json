@@ -1,0 +1,35 @@
+{
+  "files": {
+    "protocol.lock.json": "9371ae674294d87c4e92b6d126aa517c1cca78de5e027f323c8f25b259021bb7",
+    "protocol.yaml": "6cf0f5327f2d9faf2ff1b193c835658b49864c1c445f0dc297f6154e4b0e4a5b",
+    "record.html": "b1a0d0a4316c1d1e4413c75a5f78005d873539e202fed5d1fb7eeb057de0b351",
+    "record.json": "e2177e10030319047bd7d5afed9fda9522a791ef4d92ebcffffc5a821d6817f5",
+    "record.pdf": "b656a2ef6bfad8a455660186335f2eb7457bb9a01611c08573203de72b76d1dc",
+    "shots/step-01.annotated.png": "480aacc666332a333a1fb8675f98d9513ce55a955e86ee74a1cfbfbf785de053",
+    "shots/step-01.raw.png": "e6d95456b84fbccb0947ee5bdc90799628bf8c78de3f3ad2e2d2e0e521985cda",
+    "shots/step-02.annotated.png": "49462bf530e1b07f5a81e6ea0598d887c407035ff7046ac3fcd6dd50026d5d84",
+    "shots/step-02.raw.png": "49eb33c343d100e828caaff47e75b6a9e32e582a009c63b7d74627f7be9f1fe6",
+    "shots/step-03.annotated.png": "7e09c46a61470913043a21c4004f9c10d9cdd52ee7034b4480f5048eaaf8782b",
+    "shots/step-03.raw.png": "dffa388ac6bc923827c53c65826ef48add925f8bc6b3adfe2169c927d70c7cc2",
+    "shots/step-04.annotated.png": "aec5a97ce0dfe2cfd540e9749c00cfb3529c70b140abd159f685be89a58915e1",
+    "shots/step-04.raw.png": "9e33cd4c348dfe2c6d1713558a12e01d69c536665fe10af19196b321f7ec9d64",
+    "shots/step-05.annotated.png": "c5b9b3d11dc8e387e268bb221b055572d05b547171589a4d9e4527a16c6ca08f",
+    "shots/step-05.raw.png": "660300fd7e1be8fdd1d8f6e0e5a526f28822d0fd73b2872474875649a2454f41",
+    "shots/step-06.annotated.png": "2d293e4e18c125326109692167e12b2ec39e698cec5760e85ebd4b97003c7fd0",
+    "shots/step-06.raw.png": "e1ed58d7f639b486e47b38187975029fbca941ba4dd110b6be5a3ffdfa6e6b9d",
+    "shots/step-07.annotated.png": "1aa0dfbe914d3b89155ea3604706a8073e6fe094dae69e9aad1845d31d4fe22d",
+    "shots/step-07.raw.png": "e223167eb9741734b9038024ab752a39f4126b379b848293eeda50e1dd6b342f",
+    "shots/step-08.annotated.png": "9cdb989babffd39dd99edf6aa95c3c3ed0a83a19ef7565a6ce978b00fbaec335",
+    "shots/step-08.raw.png": "52496cdd7ce18701ce8651b674eb2db7ae7ce0cf5669d03545bd084b14f103a2",
+    "shots/step-09.annotated.png": "f30768f782031137f8383fa031e5cecc58054905fddf263588ac19b1fb0adbc0",
+    "shots/step-09.raw.png": "ae6d941513e5997719e1d5dfc299d160f1b067ef174017f5e39f9c22d5ec57b7",
+    "shots/step-10.annotated.png": "6046b540bc155e5a003ad445ceaa228a04068cfbffeda41b0ddd78abac0e7eef",
+    "shots/step-10.raw.png": "1a0023ae209e766e4adb4e5bc0f78fe584e6d97beff9e3ee7625c47ea5062741"
+  },
+  "audit_log": {
+    "path": "audit.jsonl",
+    "sha256": "d69f7553d3bd23a9e3ea361b099baef23eea3b507ca340d3dfa5d74dd2f7fe78",
+    "entries": 50,
+    "chain_head": "690e10a3f24c373d3440a665683b5d1969b7ceccb4cdc112f322b83bb68726d6"
+  }
+}

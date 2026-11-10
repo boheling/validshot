@@ -1,0 +1,156 @@
+{
+  "report_id": "VSR-001",
+  "title": "KA Order Entry 1.4.2 — validation summary (sample)",
+  "generated_at": "2026-11-10T15:48:01.182Z",
+  "tool": {
+    "validshot": "0.2.0",
+    "playwright": "1.64.0",
+    "node": "v24.21.0",
+    "os": "Linux 6.8.0-100-generic arm64",
+    "host": "qa-runner-01"
+  },
+  "all_pass": true,
+  "counts": {
+    "PASS": 1,
+    "FAIL": 0,
+    "ABORTED": 0
+  },
+  "open_items": [
+    "KA-001: earlier run KA-001-20261110T154735Z-9a05 FAILED with 9 deviation(s); confirm a deviation record exists and is closed."
+  ],
+  "runs": [
+    {
+      "run_id": "KA-001-20261110T154735Z-9a05",
+      "dir": "/out/runs/KA-001-20261110T154735Z-9a05",
+      "protocol": {
+        "id": "KA-001",
+        "version": 1,
+        "title": "Order entry form — display and input validation",
+        "sha256": "6cf0f5327f2d9faf2ff1b193c835658b49864c1c445f0dc297f6154e4b0e4a5b",
+        "file": "KA-001-order-form.yaml",
+        "source": null
+      },
+      "result": "FAIL",
+      "started_at": "2026-11-10T15:47:35.263Z",
+      "system_version": "1.4.2",
+      "manifest_sha256": "08d60e44dcda7bbee3d3a68bb149bb422fbf5c98480ddf3a5745215ff4d644b6",
+      "evidence_intact": true,
+      "integrity_problems": [],
+      "deviations": [
+        {
+          "step": "1",
+          "req": [
+            "REQ-010"
+          ],
+          "result": "FAIL",
+          "assertion": "A3",
+          "expected": "field labelled \"Stock status\" shows exactly \"In stock\", and is displayed intact (in view, not covered, not truncated)",
+          "actual": "shows \"In stock\", display: is covered by <div#promo>"
+        },
+        {
+          "step": "2",
+          "req": [
+            "REQ-010",
+            "REQ-011"
+          ],
+          "result": "FAIL",
+          "assertion": "A1",
+          "expected": "field labelled \"Selected product\" shows exactly \"Extended-range calibrator set for high-throughput analyzers\", and is displayed intact (in view, not covered, not truncated)",
+          "actual": "shows \"Extended-range calibrator set for high-throughput analyzers\", display: text is cut off horizontally (463px of content in 360px)"
+        },
+        {
+          "step": "2",
+          "req": [
+            "REQ-010",
+            "REQ-011"
+          ],
+          "result": "FAIL",
+          "assertion": "A2",
+          "expected": "field labelled \"Stock status\" shows exactly \"Low stock\", and is displayed intact (in view, not covered, not truncated)",
+          "actual": "shows \"Low stock\", display: is covered by <div#promo>"
+        },
+        {
+          "step": "2",
+          "req": [
+            "REQ-010",
+            "REQ-011"
+          ],
+          "result": "FAIL",
+          "assertion": "A4",
+          "expected": "field labelled \"Total\" shows exactly \"$569.97\", and is displayed intact (in view, not covered, not truncated)",
+          "actual": "shows \"$569.90\", displayed intact"
+        },
+        {
+          "step": "3",
+          "req": [
+            "REQ-020"
+          ],
+          "result": "FAIL",
+          "assertion": "A3",
+          "expected": "field labelled \"Total\" shows exactly \"$189.99\", and is displayed intact (in view, not covered, not truncated)",
+          "actual": "shows \"$189.90\", displayed intact"
+        },
+        {
+          "step": "4",
+          "req": [
+            "REQ-020"
+          ],
+          "result": "FAIL",
+          "assertion": "A2",
+          "expected": "field labelled \"Total\" shows exactly \"$18809.01\", and is displayed intact (in view, not covered, not truncated)",
+          "actual": "shows \"$18809.00\", displayed intact"
+        },
+        {
+          "step": "5",
+          "req": [
+            "REQ-020"
+          ],
+          "result": "FAIL",
+          "assertion": "A1",
+          "expected": "alert shows exactly \"Quantity must be a whole number from 1 to 99\", and is displayed intact (in view, not covered, not truncated)",
+          "actual": "shows \"\", displayed intact"
+        },
+        {
+          "step": "5",
+          "req": [
+            "REQ-020"
+          ],
+          "result": "FAIL",
+          "assertion": "A2",
+          "expected": "button \"Place order\" is disabled",
+          "actual": "enabled"
+        },
+        {
+          "step": "5",
+          "req": [
+            "REQ-020"
+          ],
+          "result": "FAIL",
+          "assertion": "A3",
+          "expected": "field labelled \"Total\" shows exactly \"—\", and is displayed intact (in view, not covered, not truncated)",
+          "actual": "shows \"$0.00\", displayed intact"
+        }
+      ]
+    },
+    {
+      "run_id": "KA-001-20261110T154758Z-d544",
+      "dir": "/out/runs/KA-001-20261110T154758Z-d544",
+      "protocol": {
+        "id": "KA-001",
+        "version": 1,
+        "title": "Order entry form — display and input validation",
+        "sha256": "6cf0f5327f2d9faf2ff1b193c835658b49864c1c445f0dc297f6154e4b0e4a5b",
+        "file": "KA-001-order-form.yaml",
+        "source": null
+      },
+      "result": "PASS",
+      "started_at": "2026-11-10T15:47:58.631Z",
+      "system_version": "1.4.2",
+      "manifest_sha256": "65c2ac05f0fded49782adac32621e5a07c5f9b7d68f0d02b0130b98047c1fc64",
+      "evidence_intact": true,
+      "integrity_problems": [],
+      "deviations": []
+    }
+  ],
+  "excluded_dry_runs": []
+}

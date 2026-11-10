@@ -1,0 +1,115 @@
+protocol:
+  id: KA-001
+  version: 1
+  title: Order entry form — display and input validation
+  system: KA Order Entry (known-answer test app)
+
+requirements:
+  REQ-010: The order page shows the selected product's full name, its stock status and unit price.
+  REQ-011: The total equals quantity × unit price, rounded to the cent.
+  REQ-020: Quantity accepts whole numbers from 1 to 99; anything else shows an error and disables ordering.
+  REQ-030: Placing an order shows a confirmation with quantity and product.
+
+environment:
+  base_url: http://127.0.0.1:4173/good
+  viewport: { width: 1280, height: 800 }
+  timezone: UTC
+  locale: en-US
+  action_timeout_ms: 5000
+  assert_timeout_ms: 2000
+
+system_version:
+  url: /version.json
+  json: version
+
+steps:
+  - id: 1
+    req: REQ-010
+    action: Open the order page.
+    do: { goto: / }
+    expect:
+      - { target: { role: heading, name: Order }, visible: true }
+      - { target: { label: Selected product }, text: Standard reagent kit }
+      - { target: { label: Stock status }, text: In stock }
+      - { target: { label: Unit price }, text: "$12.50" }
+      - { target: { label: Total }, text: "$12.50" }
+
+  - id: 2
+    req: [REQ-010, REQ-011]
+    action: Select the calibrator set and enter quantity 3.
+    expected: The full product name is readable, the stock badge reads "Low stock", total is $569.97.
+    do:
+      - select: { target: { label: Product, exact: true }, option: Extended-range calibrator set for high-throughput analyzers }
+      - fill: { target: { label: Quantity }, value: "3" }
+    expect:
+      - { target: { label: Selected product }, text: Extended-range calibrator set for high-throughput analyzers }
+      - { target: { label: Stock status }, text: Low stock }
+      - { target: { label: Unit price }, text: "$189.99" }
+      - { target: { label: Total }, text: "$569.97" }
+
+  - id: 3
+    req: REQ-020
+    action: "Edge case, lower boundary: enter quantity 1."
+    do: { fill: { target: { label: Quantity }, value: "1" } }
+    expect:
+      - { target: { role: alert }, text: "" , display_check: false, display_check_reason: "the error area is empty when there is no error" }
+      - { target: { role: button, name: Place order }, enabled: true }
+      - { target: { label: Total }, text: "$189.99" }
+
+  - id: 4
+    req: REQ-020
+    action: "Edge case, upper boundary: enter quantity 99."
+    do: { fill: { target: { label: Quantity }, value: "99" } }
+    expect:
+      - { target: { role: button, name: Place order }, enabled: true }
+      - { target: { label: Total }, text: "$18809.01" }
+
+  - id: 5
+    req: REQ-020
+    action: "Edge case, below range: enter quantity 0."
+    do: { fill: { target: { label: Quantity }, value: "0" } }
+    expect:
+      - { target: { role: alert }, text: Quantity must be a whole number from 1 to 99 }
+      - { target: { role: button, name: Place order }, enabled: false }
+      - { target: { label: Total }, text: "—" }
+
+  - id: 6
+    req: REQ-020
+    action: "Edge case, above range: enter quantity 100."
+    do: { fill: { target: { label: Quantity }, value: "100" } }
+    expect:
+      - { target: { role: alert }, text: Quantity must be a whole number from 1 to 99 }
+      - { target: { role: button, name: Place order }, enabled: false }
+
+  - id: 7
+    req: REQ-020
+    action: 'Edge case, not a number: enter "abc".'
+    do: { fill: { target: { label: Quantity }, value: "abc" } }
+    expect:
+      - { target: { role: alert }, text: Quantity must be a whole number from 1 to 99 }
+      - { target: { role: button, name: Place order }, enabled: false }
+
+  - id: 8
+    req: REQ-020
+    action: 'Edge case, decimal: enter "2.5".'
+    do: { fill: { target: { label: Quantity }, value: "2.5" } }
+    expect:
+      - { target: { role: alert }, text: Quantity must be a whole number from 1 to 99 }
+      - { target: { role: button, name: Place order }, enabled: false }
+
+  - id: 9
+    req: REQ-020
+    action: "Edge case, empty: clear the field."
+    do: { fill: { target: { label: Quantity }, value: "" } }
+    expect:
+      - { target: { role: alert }, text: Quantity must be a whole number from 1 to 99 }
+      - { target: { role: button, name: Place order }, enabled: false }
+
+  - id: 10
+    req: REQ-030
+    action: Enter quantity 2 and place the order.
+    do:
+      - fill: { target: { label: Quantity }, value: "2" }
+      - click: { role: button, name: Place order }
+    expect:
+      - { target: { label: Order confirmation }, text: "Order placed: 2 × Extended-range calibrator set for high-throughput analyzers" }

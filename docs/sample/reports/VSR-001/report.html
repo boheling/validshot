@@ -1,0 +1,60 @@
+<!doctype html><html><head><meta charset="utf-8"><title>KA Order Entry 1.4.2 — validation summary (sample) VSR-001</title><style>
+  body{font:10.5px/1.45 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;color:#111;margin:0}
+  h1{font-size:18px;margin:0 0 2px} h2{font-size:13px;border-bottom:1.5px solid #111;padding-bottom:2px;margin:18px 0 6px;break-after:avoid}
+  h3{font-size:12px;margin:0 0 4px} table{border-collapse:collapse;width:100%;margin:4px 0} tr{break-inside:avoid}
+  th,td{border:1px solid #bbb;padding:3px 5px;text-align:left;vertical-align:top} th{background:#f2f2f2;width:22%}
+  .mono{font-family:ui-monospace,Menlo,monospace;font-size:8.5px;word-break:break-all} .meta{color:#444;font-size:9px;margin:3px 0}
+  .badge{display:inline-block;padding:0 6px;border-radius:3px;font-weight:700;font-size:9.5px;color:#fff;white-space:nowrap}
+  .pass{background:#15803d}.fail{background:#b91c1c}.blocked{background:#6b7280}
+  .note{color:#92400e;font-size:9.5px} .err{color:#b91c1c}
+  .sigs{display:flex;gap:18px;margin-top:10px;break-inside:avoid} .sig{flex:1;font-size:9.5px} .line{border-bottom:1px solid #111;height:34px;margin-bottom:3px}
+  .grid th{width:auto} .open li{margin-bottom:3px} .verdict{font-size:13px;margin:6px 0}
+  .devs td:nth-child(1){width:120px} .devs td:nth-child(2){width:40px;white-space:nowrap} .devs td:nth-child(3){width:70px} .devs td:last-child{width:90px}
+  .concl{border:1px solid #bbb;height:110px;margin:4px 0} .hist td:first-child{width:120px}
+  .trace td:nth-child(1),.trace td:nth-child(2){white-space:nowrap} .trace td:nth-child(4){width:44px}
+  </style></head><body>
+  <h1>KA Order Entry 1.4.2 — validation summary (sample)</h1>
+  <div>Summary of formal validshot executions · report VSR-001</div>
+  <p class="verdict">Most recent results: <span class="badge pass">PASS</span> &nbsp; 1 protocol(s): 1 passed, 0 failed, 0 aborted in their most recent run · 2 formal run(s) · evidence intact for every run · 1 open item(s)</p>
+  <p class="meta">This is a factual summary generated from the runs' records. It does not conclude that the system is fit for use; the conclusion in section 7 is written by the signatories.</p>
+
+  <h2>1. Report details</h2><table>
+    <tr><th>Report ID</th><td><span class="mono">VSR-001</span></td></tr>
+    <tr><th>Generated</th><td>2026-11-10T15:48:01.182Z by validshot 0.2.0 (Playwright 1.64.0, Node v24.21.0, Linux 6.8.0-100-generic arm64, host qa-runner-01)</td></tr>
+    <tr><th>System version(s) in the most recent runs</th><td>1.4.2</td></tr>
+    <tr><th>Inputs</th><td>2 formal run(s). Each run's evidence was re-verified (every file hash, the audit chain and the manifest) when this report was generated.</td></tr>
+  </table>
+
+  <h2>2. Results by protocol (most recent run)</h2>
+  <table class="grid"><tr><th>Protocol</th><th>Requirements covered</th><th>Runs</th><th>Most recent run</th><th>Executed / by</th><th>System version</th><th>Result</th><th>Evidence</th></tr><tr><td><b>KA-001</b> v1<br>Order entry form — display and input validation</td><td>4 of 4</td>
+      <td>2</td><td class="mono">KA-001-20261110T154758Z-d544</td><td>2026-11-10 15:47:58Z<br>T. Tester</td>
+      <td>1.4.2</td><td><span class="badge pass">PASS</span><div class="meta">10/10 steps pass</div></td><td><span class="badge pass">INTACT</span></td></tr></table>
+
+  <h2>3. Open items</h2>
+  <ol class="open"><li>KA-001: earlier run KA-001-20261110T154735Z-9a05 FAILED with 9 deviation(s); confirm a deviation record exists and is closed.</li></ol>
+
+  <h2>4. Requirement traceability (most recent run of each protocol)</h2>
+  <table class="grid trace"><tr><th>Protocol</th><th>Requirement</th><th>Text</th><th>Steps</th><th>Result</th></tr><tr><td>KA-001</td><td>REQ-010</td><td>The order page shows the selected product's full name, its stock status and unit price.</td><td>1, 2</td><td><span class="badge pass">PASS</span></td></tr><tr><td>KA-001</td><td>REQ-011</td><td>The total equals quantity × unit price, rounded to the cent.</td><td>2</td><td><span class="badge pass">PASS</span></td></tr><tr><td>KA-001</td><td>REQ-020</td><td>Quantity accepts whole numbers from 1 to 99; anything else shows an error and disables ordering.</td><td>3, 4, 5, 6, 7, 8, 9</td><td><span class="badge pass">PASS</span></td></tr><tr><td>KA-001</td><td>REQ-030</td><td>Placing an order shows a confirmation with quantity and product.</td><td>10</td><td><span class="badge pass">PASS</span></td></tr></table>
+
+  <h2>5. Execution history (all formal runs)</h2>
+  <table class="grid hist"><tr><th>Run ID</th><th>Protocol</th><th>Approved by</th><th>Initiated by</th><th>System version</th><th>Started</th><th>Result</th><th>Evidence (manifest sha256)</th></tr><tr><td class="mono">KA-001-20261110T154735Z-9a05</td><td>KA-001 v1<div class="mono">6cf0f5327f2d9faf…</div></td>
+      <td>A. Reviewer<div class="meta">2026-11-10 15:47:35Z</div></td><td>T. Tester</td>
+      <td>1.4.2<div class="meta">http://127.0.0.1:4173/bad <span class="err">(override)</span></div></td>
+      <td>2026-11-10 15:47:35Z</td><td><span class="badge fail">FAIL</span><div class="meta">5 pass · 5 fail · 0 blocked</div></td>
+      <td><span class="badge pass">INTACT</span><div class="mono">08d60e44dcda7bbe…</div></td></tr><tr><td class="mono">KA-001-20261110T154758Z-d544</td><td>KA-001 v1<div class="mono">6cf0f5327f2d9faf…</div></td>
+      <td>A. Reviewer<div class="meta">2026-11-10 15:47:35Z</div></td><td>T. Tester</td>
+      <td>1.4.2<div class="meta">http://127.0.0.1:4173/good</div></td>
+      <td>2026-11-10 15:47:58Z</td><td><span class="badge pass">PASS</span><div class="meta">10 pass · 0 fail · 0 blocked</div></td>
+      <td><span class="badge pass">INTACT</span><div class="mono">65c2ac05f0fded49…</div></td></tr></table>
+  <p class="meta">Each run's execution record (record.pdf) holds the per-step results and screenshots. Re-check any run with <span class="mono">validshot verify-run &lt;run-dir&gt;</span>.</p>
+
+  <h2>6. Deviations (all formal runs)</h2>
+  <table class="grid devs"><tr><th>Run ID</th><th>Step</th><th>Req</th><th>Expected</th><th>Actual</th><th>Deviation record / resolution</th></tr><tr><td class="mono">KA-001-20261110T154735Z-9a05</td><td>1 A3</td><td>REQ-010</td><td>field labelled &quot;Stock status&quot; shows exactly &quot;In stock&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;In stock&quot;, display: is covered by &lt;div#promo&gt;</td><td></td></tr><tr><td class="mono">KA-001-20261110T154735Z-9a05</td><td>2 A1</td><td>REQ-010, REQ-011</td><td>field labelled &quot;Selected product&quot; shows exactly &quot;Extended-range calibrator set for high-throughput analyzers&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;Extended-range calibrator set for high-throughput analyzers&quot;, display: text is cut off horizontally (463px of content in 360px)</td><td></td></tr><tr><td class="mono">KA-001-20261110T154735Z-9a05</td><td>2 A2</td><td>REQ-010, REQ-011</td><td>field labelled &quot;Stock status&quot; shows exactly &quot;Low stock&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;Low stock&quot;, display: is covered by &lt;div#promo&gt;</td><td></td></tr><tr><td class="mono">KA-001-20261110T154735Z-9a05</td><td>2 A4</td><td>REQ-010, REQ-011</td><td>field labelled &quot;Total&quot; shows exactly &quot;$569.97&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;$569.90&quot;, displayed intact</td><td></td></tr><tr><td class="mono">KA-001-20261110T154735Z-9a05</td><td>3 A3</td><td>REQ-020</td><td>field labelled &quot;Total&quot; shows exactly &quot;$189.99&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;$189.90&quot;, displayed intact</td><td></td></tr><tr><td class="mono">KA-001-20261110T154735Z-9a05</td><td>4 A2</td><td>REQ-020</td><td>field labelled &quot;Total&quot; shows exactly &quot;$18809.01&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;$18809.00&quot;, displayed intact</td><td></td></tr><tr><td class="mono">KA-001-20261110T154735Z-9a05</td><td>5 A1</td><td>REQ-020</td><td>alert shows exactly &quot;Quantity must be a whole number from 1 to 99&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;&quot;, displayed intact</td><td></td></tr><tr><td class="mono">KA-001-20261110T154735Z-9a05</td><td>5 A2</td><td>REQ-020</td><td>button &quot;Place order&quot; is disabled</td><td>enabled</td><td></td></tr><tr><td class="mono">KA-001-20261110T154735Z-9a05</td><td>5 A3</td><td>REQ-020</td><td>field labelled &quot;Total&quot; shows exactly &quot;—&quot;, and is displayed intact (in view, not covered, not truncated)</td><td>shows &quot;$0.00&quot;, displayed intact</td><td></td></tr></table>
+  <p class="meta">Deviations of earlier runs remain listed after a later run passes. Enter the reference of each deviation record from the organisation's deviation system.</p>
+  
+
+  <h2>7. Conclusion and approval</h2>
+  <p class="meta">To be written by the signatories, taking into account the open items in section 3 and the resolution of each deviation in section 6.</p>
+  <div class="concl"></div>
+  <div class="sigs"><div class="sig"><div class="line"></div><b>Prepared by</b><br>Name / signature / date</div><div class="sig"><div class="line"></div><b>Reviewed by</b><br>Name / signature / date</div><div class="sig"><div class="line"></div><b>Approved by (QA)</b><br>Name / signature / date</div></div>
+  </body></html>
