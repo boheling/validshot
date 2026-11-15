@@ -7,6 +7,8 @@ out: validshot-promo.mp4
 purpose: pitch
 viewport: { width: 1120, height: 630 }
 theme: { accent: "#fde047", ink: "#0f172a" }
+frame: studio
+ground: light
 voice:
   provider: kokoro
   voice: am_michael
