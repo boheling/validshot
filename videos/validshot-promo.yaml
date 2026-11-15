@@ -1,0 +1,103 @@
+# Promo for validshot, made with storyshot (https://github.com/boheling/storyshot).
+# Records the known-answer example app and the unedited sample output in docs/sample.
+#   node videos/serve.mjs            # in one terminal
+#   storyshot render videos/validshot-promo.yaml
+url: http://127.0.0.1:4180/bad/
+out: validshot-promo.mp4
+purpose: pitch
+viewport: { width: 1120, height: 630 }
+theme: { accent: "#fde047", ink: "#0f172a" }
+voice:
+  provider: kokoro
+  voice: am_michael
+  pronounce: { validshot: valid shot, Validshot: Valid shot }
+music: { volume: 0.7 }
+subtitles: true
+
+intro:
+  title: validshot
+  subtitle: Validation evidence an auditor can **sign**
+  say: In regulated software, display checks are still done by hand.
+
+steps:
+  - caption: A test app with **planted defects**
+    say: Take this order form. It has display defects planted in it.
+    duration: 5
+    actions:
+      - select: { target: { label: "Product", exact: true }, option: "Extended-range calibrator set" }
+      - type: { target: { label: "Quantity", exact: true }, text: "3", clear: true }
+
+  - caption: The text is right. **You can't read it.**
+    captionPosition: top
+    say: A banner covers the stock badge, and the product name is cut off.
+    duration: 5
+    zoom: { target: "#promo", scale: 1.5, start: 0.3, ramp: [0.8, 0.5] }
+    actions:
+      - move: "#promo"
+      - pause: 1200
+      - move: "#product-name"
+
+  - caption: 3 × $189.99 is **not $569.90**
+    say: And the total is seven cents short.
+    duration: 3.5
+    zoom: { target: "#total", scale: 1.6, start: 0.2, ramp: [0.7, 0.5] }
+    actions:
+      - mark: { css: "#total", box: true, color: "#ef4444" }
+      - pause: 2200
+
+  - hidden: true
+    actions:
+      - goto: /sample/runs/KA-001-20261110T154735Z-9a05/record.html
+      - scrollTo: { css: 'section.step:has-text("Step 2 FAIL")' }
+
+  - caption: Every check, **expected vs actual**
+    captionPosition: top
+    say: Validshot replays a locked protocol, and records every check. Expected, against actual.
+    duration: 7
+    zoom: { target: 'section.step:has-text("Step 2 FAIL") table.asserts tr:nth-child(3) td:nth-child(3)', scale: 1.45, start: 0.4, ramp: [0.8, 0.5] }
+    actions:
+      - mark: { css: 'section.step:has-text("Step 2 FAIL") table.asserts tr:nth-child(3)' }
+      - pause: 1500
+      - mark: { css: 'section.step:has-text("Step 2 FAIL") table.asserts tr:nth-child(5)' }
+
+  - caption: A raw screenshot, and an **annotated copy**
+    captionPosition: top
+    say: Each step keeps the raw screenshot, and an annotated copy with every check boxed.
+    duration: 6.5
+    zoom: { target: { x: 0.36, y: 0.52 }, scale: 1.5, start: 2.4, ramp: [0.8, 0.5] }
+    actions:
+      - scrollTo: { alt: "annotated screenshot of step 2", ms: 1200 }
+      - move: { x: 0.33, y: 0.45, ms: 900 }
+      - pause: 800
+      - move: { x: 0.3, y: 0.72, ms: 900 }
+
+  - hidden: true
+    actions:
+      - goto: /sample/runs/KA-001-20261110T154735Z-9a05/record.html
+
+  - caption: A **hash-chained** audit trail
+    say: Every file is hashed into an append-only audit trail.
+    duration: 4.5
+    zoom: { target: 'tr:has-text("Evidence chain head") th', scale: 1.4, start: 0.3, ramp: [0.7, 0.5] }
+    actions:
+      - mark: { css: 'tr:has-text("Evidence chain head") td' }
+      - pause: 3000
+
+  - hidden: true
+    actions:
+      - goto: /sample/reports/VSR-001/report.html
+
+  - caption: One report over **every formal run**
+    say: A summary report covers every formal run, the failed ones included.
+    duration: 5.5
+    zoom: { target: { x: 0.5, y: 0.2 }, scale: 1.3, start: 2.2, ramp: [0.8, 0.5] }
+    actions:
+      - scrollTo: { role: heading, name: "5. Execution history (all formal runs)", ms: 1400 }
+      - mark: { css: "table.hist" }
+      - pause: 2500
+
+end_card:
+  title: validshot
+  subtitle: No AI in the execution path. **People approve and sign.**
+  say: No AI runs the test. People approve, and people sign.
+  cta: npm install -g validshot

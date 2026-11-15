@@ -9,3 +9,8 @@ reports/
 !docs/sample/runs/
 !docs/sample/reports/
 !docs/sample/*.review.pdf
+
+# promo video (storyshot): keep the storyboard, not the renders
+videos/.storyshot/
+videos/*.mp4
+videos/*.srt
