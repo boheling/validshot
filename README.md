@@ -7,9 +7,9 @@ are often still done by hand: follow a test script, take a screenshot, paste it 
 a document, compare it with the expected value, sign. validshot does the clicking,
 the screenshots and the comparisons. People still write, approve and sign.
 
-[![Watch the 57-second demo](docs/video/validshot-promo-cover.jpg)](https://github.com/boheling/validshot/releases/download/v0.2.0/validshot-promo.mp4)
+[![Watch the 57-second demo](docs/video/validshot-promo-cover.jpg)](https://youtu.be/g3jhFvH77C0)
 
-*57-second demo (MP4, 12 MB, with sound): a test app with planted defects, the
+*57-second demo on YouTube (with sound): a test app with planted defects, the
 execution record that catches them, the run on video, and a signed, timestamped
 summary report.*
 
