@@ -1,6 +1,6 @@
 {
   "name": "validshot",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Deterministic front-end validation runner: locked YAML protocols, raw screenshot evidence, SHA-256 hash-chained audit trail, signable execution records (PDF + JSON).",
   "keywords": [
     "validation",

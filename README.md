@@ -9,7 +9,7 @@ the screenshots and the comparisons. People still write, approve and sign.
 
 [![Watch the 46-second demo](docs/video/validshot-promo-cover.jpg)](https://github.com/boheling/validshot/releases/download/v0.2.0/validshot-promo.mp4)
 
-*46-second demo (MP4, 10 MB, with sound): a test app with planted defects, the
+*46-second demo (MP4, 11 MB, with sound): a test app with planted defects, the
 execution record that catches them, and the summary report.*
 
 ![Step 2 of a sample execution record: three of four checks fail](docs/sample/img/record-step-2-fail.png)
@@ -78,7 +78,7 @@ npx playwright install chromium        # once, if not already cached
 validshot --help
 ```
 
-Pin the exact version in a validated setup (`npm install validshot@0.2.0`): the tool
+Pin the exact version in a validated setup (`npm install validshot@0.2.1`): the tool
 version goes on every record, and a version change needs its own assessment.
 
 ## Quick start (from a clone, with the example apps)
@@ -216,14 +216,14 @@ The full YAML reference and edge-case checklist are in
 ### With a coding agent (MCP, authoring only)
 
 ```json
-{ "mcpServers": { "validshot": { "command": "npx", "args": ["-y", "validshot@0.2.0", "mcp"] } } }
+{ "mcpServers": { "validshot": { "command": "npx", "args": ["-y", "validshot@0.2.1", "mcp"] } } }
 ```
 
 Tools: `validshot_guide`, `inspect_page`, `check_protocol`, `dry_run`,
 `render_protocol`. There is no tool for lock, formal run or report. For Claude Code,
 also copy `skills/validshot/` to `.claude/skills/validshot/`.
 
-## Status: 0.2.0 (M1 of the design + authoring loop)
+## Status: 0.2.1 (M1 of the design + authoring loop)
 
 Done:
 - Evidence Runner (M1);

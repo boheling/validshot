@@ -3,6 +3,15 @@
 Review this before updating a qualified installation (see the requalification section of
 [the IQ/OQ template](docs/tool-validation/03-IQ-OQ-protocol.md)).
 
+## 0.2.1 — 2026-11-15
+
+Documentation and package metadata only. No file under `bin/`, `src/` or `skills/`
+changed, so the tool behaves exactly as 0.2.0 does; only the version it prints on
+records differs.
+
+- README: sample output (`docs/sample/`) with screenshots, and a short demo video.
+- npm keywords.
+
 ## 0.2.0 — 2026-10-31
 
 Added
