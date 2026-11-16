@@ -7,10 +7,11 @@ are often still done by hand: follow a test script, take a screenshot, paste it 
 a document, compare it with the expected value, sign. validshot does the clicking,
 the screenshots and the comparisons. People still write, approve and sign.
 
-[![Watch the 46-second demo](docs/video/validshot-promo-cover.jpg)](https://github.com/boheling/validshot/releases/download/v0.2.0/validshot-promo.mp4)
+[![Watch the 57-second demo](docs/video/validshot-promo-cover.jpg)](https://github.com/boheling/validshot/releases/download/v0.2.0/validshot-promo.mp4)
 
-*46-second demo (MP4, 11 MB, with sound): a test app with planted defects, the
-execution record that catches them, and the summary report.*
+*57-second demo (MP4, 12 MB, with sound): a test app with planted defects, the
+execution record that catches them, the run on video, and a signed, timestamped
+summary report.*
 
 ![Step 2 of a sample execution record: three of four checks fail](docs/sample/img/record-step-2-fail.png)
 

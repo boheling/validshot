@@ -1,6 +1,6 @@
 // One origin for the promo recording: the known-answer app at /good/ and /bad/,
-// and the sample output (docs/sample) at /sample/.
-//   node videos/serve.mjs [port]
+// and sample output at /sample/ (docs/sample, or the directory given).
+//   node videos/serve.mjs [port] [sample-dir]
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -8,8 +8,8 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const APP = path.join(ROOT, 'examples/ka-app/public/index.html');
-const SAMPLE = path.join(ROOT, 'docs/sample');
-const TYPES = { '.html': 'text/html; charset=utf-8', '.png': 'image/png', '.json': 'application/json', '.pdf': 'application/pdf', '.jsonl': 'text/plain', '.yaml': 'text/plain' };
+const SAMPLE = process.argv[3] ? path.resolve(process.argv[3]) : path.join(ROOT, 'docs/sample');
+const TYPES = { '.html': 'text/html; charset=utf-8', '.png': 'image/png', '.json': 'application/json', '.pdf': 'application/pdf', '.jsonl': 'text/plain', '.yaml': 'text/plain', '.webm': 'video/webm' };
 
 const port = Number(process.argv[2] ?? 4180);
 http.createServer((req, res) => {

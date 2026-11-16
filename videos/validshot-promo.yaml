@@ -1,6 +1,7 @@
 # Promo for validshot, made with storyshot (https://github.com/boheling/storyshot).
-# Records the known-answer example app and the unedited sample output in docs/sample.
-#   node videos/serve.mjs            # in one terminal
+# Records the known-answer example app and unedited validshot output for it.
+#   node videos/serve.mjs 4180 videos/.sample    # in one terminal; videos/.sample holds runs made with 0.3.0
+#                                              # (WebKit, video, signed, timestamped): see the README
 #   storyshot render videos/validshot-promo.yaml
 url: http://127.0.0.1:4180/bad/
 out: validshot-promo.mp4
@@ -49,7 +50,7 @@ steps:
 
   - hidden: true
     actions:
-      - goto: /sample/runs/KA-001-20261110T154735Z-9a05/record.html
+      - goto: /sample/runs/KA-001-20261116T055555Z-683d/record.html
       - scrollTo: { css: 'section.step:has-text("Step 2 FAIL")' }
 
   - caption: Every check, **expected vs actual**
@@ -75,28 +76,45 @@ steps:
 
   - hidden: true
     actions:
-      - goto: /sample/runs/KA-001-20261110T154735Z-9a05/record.html
+      - goto: /sample/runs/KA-001-20261116T055555Z-683d/record.html
 
-  - caption: A **hash-chained** audit trail
-    say: Every file is hashed into an append-only audit trail.
-    duration: 4.5
-    zoom: { target: 'tr:has-text("Evidence chain head") th', scale: 1.4, start: 0.3, ramp: [0.7, 0.5] }
+  - caption: Chromium, Firefox or **WebKit**
+    say: Run it in Chromium, Firefox, or WebKit.
+    duration: 4
+    zoom: { target: 'tr:has-text("Execution tool") th', scale: 1.4, start: 0.3, ramp: [0.7, 0.5] }
     actions:
-      - mark: { css: 'tr:has-text("Evidence chain head") td' }
-      - pause: 3000
+      - mark: { css: 'tr:has-text("Execution tool") td' }
+      - pause: 2600
+
+  - caption: The whole run **on video**, unedited
+    say: The whole run is on video. Unedited, and hashed like every other file.
+    duration: 5.5
+    zoom: { target: 'tr:has-text("Recording started") th', scale: 1.4, start: 0.3, ramp: [0.7, 0.5] }
+    actions:
+      - mark: { css: 'tr:has-text("Recording started") td' }
+      - pause: 4000
 
   - hidden: true
     actions:
-      - goto: /sample/reports/VSR-001/report.html
+      - goto: /sample/reports/VSR-002/report.html
+      - scrollTo: { role: heading, name: "5. Execution history (all formal runs)" }
 
   - caption: One report over **every formal run**
     say: A summary report covers every formal run, the failed ones included.
-    duration: 5.5
-    zoom: { target: { x: 0.5, y: 0.2 }, scale: 1.3, start: 2.2, ramp: [0.8, 0.5] }
+    duration: 5
     actions:
-      - scrollTo: { role: heading, name: "5. Execution history (all formal runs)", ms: 1400 }
       - mark: { css: "table.hist" }
-      - pause: 2500
+      - pause: 3500
+
+  - caption: Hashed, **signed** and timestamped
+    say: Every run is hashed, signed with a key, and timestamped by a third party.
+    duration: 6
+    zoom: { target: "table.hist tr:nth-child(2) td:last-child", scale: 1.7, start: 0.3, ramp: [0.8, 0.5] }
+    actions:
+      - mark: { css: "table.hist tr:nth-child(2) td:last-child" }
+      - pause: 1800
+      - mark: { css: "table.hist tr:nth-child(3) td:last-child" }
+      - pause: 1800
 
 end_card:
   title: validshot
