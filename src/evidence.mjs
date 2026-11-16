@@ -7,6 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { sha256 } from './protocol.mjs';
+import { verifySignatures, verifyTimestamp, trustedFingerprints } from './sign.mjs';
 
 const GENESIS = '0'.repeat(64);
 const entryHash = (e) => sha256(JSON.stringify({ seq: e.seq, at: e.at, type: e.type, data: e.data, prev: e.prev }));
@@ -54,8 +55,12 @@ export class EvidenceStore {
   }
 }
 
-// Re-check a sealed run: every file's hash, the chain, and that log and manifest agree.
-export function verifyRun(dir) {
+// Re-check a sealed run: every file's hash, the chain, and that log and manifest agree;
+// then the signatures and the trusted timestamp, if the run has them.
+//   trust            public key files or fingerprints: at least one valid signature must be from one of them
+//   caFile           the TSA's certificate chain (PEM): the timestamp token is verified with OpenSSL
+//   requireTimestamp a run without a trusted timestamp is a problem
+export function verifyRun(dir, { trust = [], caFile, requireTimestamp = false } = {}) {
   const problems = [];
   const mfile = path.join(dir, 'manifest.json');
   if (!fs.existsSync(mfile)) return { ok: false, problems: ['manifest.json is missing (run not sealed?)'] };
@@ -82,5 +87,12 @@ export function verifyRun(dir) {
   }
   if (prev !== manifest.audit_log.chain_head) problems.push('chain head differs from manifest');
   for (const [rel, h] of Object.entries(manifest.files)) if (logged.get(rel) !== h) problems.push(`manifest entry ${rel} is not the hash the audit log recorded`);
-  return { ok: problems.length === 0, problems, manifest_sha256: sha256(mbuf), entries: n, files: Object.keys(manifest.files).length };
+  const trusted = trustedFingerprints(trust);
+  const signatures = verifySignatures(dir, { trust: trusted });
+  for (const s of signatures) if (!s.valid) problems.push(`signature of ${s.signer ?? '(unknown)'}: ${s.reason}`);
+  if (trusted.length && !signatures.some((s) => s.valid && s.trusted)) problems.push(signatures.length ? 'no valid signature from a trusted key' : 'not signed (a trusted key was required)');
+  const timestamp = verifyTimestamp(dir, { caFile });
+  if (timestamp && !timestamp.valid) problems.push(`trusted timestamp: ${timestamp.reason}`);
+  if (!timestamp && (requireTimestamp || caFile)) problems.push('no trusted timestamp (one was required)');
+  return { ok: problems.length === 0, problems, manifest_sha256: sha256(mbuf), entries: n, files: Object.keys(manifest.files).length, signatures, timestamp };
 }

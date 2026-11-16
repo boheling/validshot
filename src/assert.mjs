@@ -4,6 +4,7 @@
 // protocol's assertion timeout (polled every 100 ms), otherwise it FAILs with the
 // last actual value seen.
 import { DEFAULTS } from './protocol.mjs';
+import { decodePng, rendered } from './png.mjs';
 
 export function locatorFor(page, t) {
   if (typeof t === 'string') return page.locator(t);
@@ -78,12 +79,12 @@ export function describeAssertion(e, { displayCheck = true } = {}) {
   if (e.enabled !== undefined) parts.push(e.enabled ? 'is enabled' : 'is disabled');
   if (e.checked !== undefined) parts.push(e.checked ? 'is checked' : 'is not checked');
   if (e.attribute) parts.push(`has ${e.attribute.name}="${e.attribute.value}"`);
-  if (displayCheck && wantsDisplayCheck(e)) parts.push('and is displayed intact (in view, not covered, not truncated)');
+  if (displayCheck && wantsDisplayCheck(e)) parts.push('and is displayed intact (in view, not covered, not truncated, legible as rendered)');
   return `${t} ${parts.join(', ')}${e.within_ms !== undefined ? ` — within ${e.within_ms} ms of the step's last action` : ''}`;
 }
 
 // "Displayed correctly" is more than the DOM: the element must be in the viewport,
-// not covered by another element, and its text not cut off.
+// not covered by another element, its text not cut off, and legible in the rendered pixels.
 const wantsDisplayCheck = (e) => e.display_check !== false && (e.visible === true || e.text !== undefined || e.contains !== undefined || e.matches !== undefined);
 
 function integrity(el) {
@@ -114,10 +115,87 @@ function integrity(el) {
     const pr = p.getBoundingClientRect();
     if (r.left < pr.left - 1 || r.right > pr.right + 1 || r.top < pr.top - 1 || r.bottom > pr.bottom + 1) { issues.push(`is clipped by ${name(p)}`); break; }
   }
+  // The first font family of the element is a web font and none of its faces is loaded,
+  // although the element shows text: the text is in a fallback font (or, for an icon
+  // font, shows the wrong glyphs). WebKit resets a failed face to "unloaded", so the
+  // rule is "not loaded", not "errored".
+  const fam = s.fontFamily.split(',')[0].trim().replace(/^["']|["']$/g, '');
+  const faces = [...document.fonts].filter((f) => f.family.replace(/^["']|["']$/g, '') === fam);
+  const hasText = (['INPUT', 'TEXTAREA'].includes(el.tagName) ? el.value : el.innerText ?? '').trim() !== '';
+  if (hasText && faces.length && !faces.some((f) => f.status === 'loaded')) {
+    issues.push(faces.some((f) => f.status === 'loading') ? `web font "${fam}" is still loading` : `web font "${fam}" is not loaded (a fallback font is shown)`);
+  }
   return issues;
 }
 
-async function evaluateOnce(page, e) {
+// Where the element's text is on screen, in viewport CSS px: one rectangle per line of
+// each text node (or the content box of a form field that holds a value). Lines that
+// are not fully visible (scrolled out of a clipping ancestor, outside the viewport) are
+// left out: truncation is judged separately. → null when there is no text to read.
+function textLines(el) {
+  const round = (r) => ({ x: Math.floor(r.left), y: Math.floor(r.top), w: Math.ceil(r.right) - Math.floor(r.left), h: Math.ceil(r.bottom) - Math.floor(r.top) });
+  const clipsOf = [];
+  for (let p = el; p && p !== document.documentElement; p = p.parentElement) {
+    const st = getComputedStyle(p);
+    if (st.overflowX !== 'visible' || st.overflowY !== 'visible') clipsOf.push(p.getBoundingClientRect());
+  }
+  const whole = (r) => r.width >= 3 && r.height >= 3 && r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight &&
+    clipsOf.every((c) => r.left >= c.left - 1 && r.right <= c.right + 1 && r.top >= c.top - 1 && r.bottom <= c.bottom + 1);
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName)) {
+    const shown = el.tagName === 'SELECT' ? el.selectedOptions[0]?.textContent : el.value;
+    if (!shown || !shown.trim() || ['checkbox', 'radio', 'range', 'color', 'file', 'hidden', 'password'].includes(el.type)) return null;
+    const r = el.getBoundingClientRect();
+    const box = { left: r.left + el.clientLeft, top: r.top + el.clientTop, right: r.left + el.clientLeft + el.clientWidth, bottom: r.top + el.clientTop + el.clientHeight };
+    box.width = box.right - box.left; box.height = box.bottom - box.top;
+    return whole(box) ? [{ ...round(box), split: false }] : null;
+  }
+  const lines = [];
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n && lines.length < 200; n = walker.nextNode()) {
+    if (!n.nodeValue.trim()) continue;
+    const parent = n.parentElement, ps = getComputedStyle(parent);
+    if (ps.visibility !== 'visible' || (parent.checkVisibility && !parent.checkVisibility())) continue;
+    const range = document.createRange();
+    range.selectNodeContents(n);
+    // thirds are only judged for running text: preserved whitespace can leave a third of a line empty by design
+    const split = !ps.whiteSpace.startsWith('pre') && Number.parseFloat(ps.wordSpacing || '0') < 8;
+    for (const r of range.getClientRects()) if (whole(r)) lines.push({ ...round(r), split });
+  }
+  return lines.length ? lines : null;
+}
+
+// Legibility is judged on the rendered pixels, not on styles: a screenshot of the area
+// where the text is (the page is not touched) must show something that stands out from
+// its background. This catches what hit-testing cannot see — an overlay with
+// `pointer-events: none`, text in the background colour, a mask, a near-opaque veil —
+// in every browser engine, because it only looks at the picture.
+// A line wide enough to hold several characters is also judged in thirds, so a cover
+// over part of the text is found.
+export const DEFAULT_MIN_CONTRAST = 2;
+async function legibility(page, el, min) {
+  const lines = await el.evaluate(textLines);
+  if (!lines) return [];
+  const x0 = Math.min(...lines.map((l) => l.x)), y0 = Math.min(...lines.map((l) => l.y));
+  const clip = { x: x0, y: y0, width: Math.max(...lines.map((l) => l.x + l.w)) - x0, height: Math.max(...lines.map((l) => l.y + l.h)) - y0 };
+  const img = decodePng(await page.screenshot({ clip, type: 'png', scale: 'css' }));
+  const fx = img.width / clip.width, fy = img.height / clip.height; // 1 with scale: css; kept in case an engine ignores it
+  const at = (l, a, b) => rendered(img, { x: (l.x - x0 + l.w * a) * fx, y: (l.y - y0) * fy, w: l.w * (b - a) * fx, h: l.h * fy });
+  const fmt = (r) => `${r.ratio.toFixed(1)}:1`;
+  let worst = null;
+  for (const [i, l] of lines.entries()) {
+    const all = at(l, 0, 1);
+    if (all.ratio < min) { worst = { ...all, text: `text is not legible as rendered${lines.length > 1 ? ` (line ${i + 1})` : ''}: contrast ${fmt(all)} against its background, minimum ${min}:1` }; break; }
+    if (!l.split || l.w < 30) continue;
+    for (const [k, part] of ['left', 'middle', 'right'].entries()) {
+      const r = at(l, k / 3, (k + 1) / 3);
+      if (r.ratio < min && !worst) worst = { ...r, text: `part of the text is not legible as rendered (${part} third${lines.length > 1 ? ` of line ${i + 1}` : ''}: contrast ${fmt(r)}, minimum ${min}:1)` };
+    }
+    if (worst) break;
+  }
+  return worst ? [worst.text] : [];
+}
+
+async function evaluateOnce(page, e, { minContrast = DEFAULT_MIN_CONTRAST } = {}) {
   if (e.url !== undefined) {
     const url = page.url();
     const pass = typeof e.url === 'string' ? url.includes(e.url) : new RegExp(e.url.matches).test(url);
@@ -150,7 +228,13 @@ async function evaluateOnce(page, e) {
   if (wantsDisplayCheck(e) && visible) {
     await el.scrollIntoViewIfNeeded({ timeout: 1000 }).catch(() => {});
     const issues = await el.evaluate(integrity);
+    // the condition was met (or not) at this moment; reading the pixels back takes
+    // a screenshot and must not count against a time limit
+    const at = Date.now();
+    // the picture is only read once everything else holds, so a failing poll stays cheap
+    if (!issues.length && !fails.length) issues.push(...await legibility(page, el, e.min_contrast ?? minContrast));
     add(issues.length === 0, issues.length ? `display: ${issues.join('; ')}` : 'displayed intact');
+    return { pass: fails.length === 0, actual: actual.join(', '), at };
   }
   return { pass: fails.length === 0, actual: actual.join(', ') };
 }
@@ -159,20 +243,22 @@ async function evaluateOnce(page, e) {
 // (t0) and stops at the first poll where the condition holds. Polling is every 50 ms,
 // so the measurement is an upper bound with about 50 ms resolution, measured on the
 // host clock and including network time.
-export async function evaluate(page, e, { timeout = DEFAULTS.assert_timeout_ms, t0 } = {}) {
+export async function evaluate(page, e, { timeout = DEFAULTS.assert_timeout_ms, t0, minContrast } = {}) {
   const timed = e.within_ms !== undefined;
   // a timed assertion keeps polling past its limit (up to 2×) so the record shows how late it was
   const limit = e.timeout_ms ?? (timed ? Math.max(timeout, e.within_ms * 2) : timeout);
   const deadline = Date.now() + limit;
   let last;
   for (;;) {
-    try { last = await evaluateOnce(page, e); } catch (x) { last = { pass: false, actual: `error: ${x.message.split('\n')[0]}` }; }
+    try { last = await evaluateOnce(page, e, { minContrast }); } catch (x) { last = { pass: false, actual: `error: ${x.message.split('\n')[0]}` }; }
     if (last.pass || Date.now() >= deadline) break;
     await page.waitForTimeout(timed ? 50 : 100);
   }
+  const metAt = last.at ?? Date.now();
+  delete last.at;
   const out = { expected: describeAssertion(e), ...last, display_check: wantsDisplayCheck(e) ? 'on' : (e.display_check === false ? `off: ${e.display_check_reason}` : 'n/a') };
   if (timed) {
-    const ms = Date.now() - t0;
+    const ms = metAt - t0;
     out.elapsed_ms = last.pass ? ms : null;
     if (last.pass && ms > e.within_ms) out.pass = false;
     out.actual += last.pass ? `; after ${ms} ms (limit ${e.within_ms} ms)` : `; not met after ${ms} ms (limit ${e.within_ms} ms)`;

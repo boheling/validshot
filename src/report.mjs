@@ -10,6 +10,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import YAML from 'yaml';
 import { EvidenceStore, verifyRun } from './evidence.mjs';
+import { loadPrivateKey, signRun, timestampRun } from './sign.mjs';
 import { esc, badge, sig, BASE_CSS } from './record.mjs';
 import { toPdf } from './pdf.mjs';
 import { TOOL_VERSION, PLAYWRIGHT_VERSION } from './version.mjs';
@@ -30,8 +31,8 @@ export function findRuns(inputs) {
   return [...new Set(out)];
 }
 
-function loadRun(dir) {
-  const integrity = verifyRun(dir);
+function loadRun(dir, verify = {}) {
+  const integrity = verifyRun(dir, verify);
   const base = { dir, integrity };
   const rec = path.join(dir, 'record.json');
   if (fs.existsSync(rec)) {
@@ -79,6 +80,11 @@ export function reportHtml(rep) {
   const row = (k, v) => `<tr><th>${esc(k)}</th><td>${v}</td></tr>`;
   const intact = (r) => (r.integrity.ok ? '<span class="badge pass">INTACT</span>' : '<span class="badge fail">NOT INTACT</span>');
   const result = (r) => badge(r.result === 'ABORTED' ? 'ABORTED' : r.result);
+  // signatures and trusted timestamp of a run, as verified when this report was generated
+  const attested = (r) => [
+    ...(r.integrity.signatures ?? []).filter((x) => x.valid).map((x) => `signed: ${esc(x.signer)} · key <span class="mono">${esc(x.key_fingerprint.slice(0, 12))}…</span>${x.trusted ? ' (trusted key)' : ''}`),
+    ...(r.integrity.timestamp?.valid ? [`timestamp: ${when(r.integrity.timestamp.gen_time)}${r.integrity.timestamp.issuer_verified ? ' (TSA verified)' : ' (TSA not verified)'}`] : []),
+  ].map((t) => `<div class="meta">${t}</div>`).join('');
   const when = (t) => esc(String(t).replace('T', ' ').replace(/\.\d+Z$/, 'Z'));
   const overview = s.protocols.map((p) => {
     const l = p.latest, rec = l.record;
@@ -103,7 +109,7 @@ export function reportHtml(rep) {
       <td>${rec ? `${esc(rec.lock.approved_by)}<div class="meta">${when(rec.lock.approved_at)}</div>` : '—'}</td><td>${esc(rec?.initiator ?? '—')}</td>
       <td>${esc(rec?.system_version?.value ?? '—')}<div class="meta">${esc(rec?.base_url ?? '')}${rec?.base_url_overridden ? ' <span class="err">(override)</span>' : ''}</div></td>
       <td>${when(r.started_at)}</td><td>${result(r)}${rec ? `<div class="meta">${rec.counts.PASS} pass · ${rec.counts.FAIL} fail · ${rec.counts.BLOCKED} blocked</div>` : `<div class="meta">${esc(r.reason)}</div>`}</td>
-      <td>${intact(r)}<div class="mono">${esc((r.integrity.manifest_sha256 ?? '').slice(0, 16))}${r.integrity.manifest_sha256 ? '…' : ''}</div></td></tr>`;
+      <td>${intact(r)}<div class="mono">${esc((r.integrity.manifest_sha256 ?? '').slice(0, 16))}${r.integrity.manifest_sha256 ? '…' : ''}</div>${attested(r)}</td></tr>`;
   }).join('');
   const devs = s.formal.filter((r) => r.record?.deviations.length).flatMap((r) => r.record.deviations.map((d) =>
     `<tr><td class="mono">${esc(r.run_id)}</td><td>${esc(d.step)}${d.assertion ? ` ${esc(d.assertion)}` : ''}</td><td>${d.req.map(esc).join(', ')}</td><td>${esc(d.expected)}</td><td>${esc(d.actual)}</td><td></td></tr>`)).join('');
@@ -122,7 +128,7 @@ export function reportHtml(rep) {
     ${row('Report ID', `<span class="mono">${esc(rep.report_id)}</span>`)}
     ${row('Generated', `${esc(rep.generated_at)} by validshot ${esc(rep.tool.validshot)} (Playwright ${esc(rep.tool.playwright)}, Node ${esc(rep.tool.node)}, ${esc(rep.tool.os)}, host ${esc(rep.tool.host)})`)}
     ${row('System version(s) in the most recent runs', s.versions.length ? s.versions.map(esc).join(', ') : '—')}
-    ${row('Inputs', `${s.formal.length} formal run(s)${s.excluded.length ? `; ${s.excluded.length} dry run(s) left out (not evidence)` : ''}. Each run's evidence was re-verified (every file hash, the audit chain and the manifest) when this report was generated.`)}
+    ${row('Inputs', `${s.formal.length} formal run(s)${s.excluded.length ? `; ${s.excluded.length} dry run(s) left out (not evidence)` : ''}. Each run's evidence was re-verified (every file hash, the audit chain, the manifest, and any signature and trusted timestamp) when this report was generated.`)}
   </table>
 
   <h2>2. Results by protocol (most recent run)</h2>
@@ -150,8 +156,8 @@ export function reportHtml(rep) {
   </body></html>`;
 }
 
-export async function buildReport(inputs, { title = 'Validation summary report', id, outDir = 'reports', now = new Date() } = {}) {
-  const runs = findRuns(inputs).map(loadRun);
+export async function buildReport(inputs, { title = 'Validation summary report', id, outDir = 'reports', now = new Date(), trust, caFile, requireTimestamp, signKey, signer, tsa } = {}) {
+  const runs = findRuns(inputs).map((d) => loadRun(d, { trust, caFile, requireTimestamp }));
   const summary = summarize(runs);
   if (!summary.formal.length) throw new Error(`no formal runs among the inputs (${runs.length} dry run(s) found; dry runs are not evidence)`);
   const reportId = id ?? `report-${stamp(now)}-${crypto.randomBytes(2).toString('hex')}`;
@@ -162,7 +168,7 @@ export async function buildReport(inputs, { title = 'Validation summary report',
   const rep = { report_id: reportId, title, generated_at: now.toISOString(), tool, summary };
   const json = { report_id: reportId, title, generated_at: rep.generated_at, tool, all_pass: summary.allPass, counts: summary.counts, open_items: summary.open,
     runs: summary.formal.map((r) => ({ run_id: r.run_id, dir: r.dir, protocol: r.protocol, result: r.result, started_at: r.started_at, system_version: r.record?.system_version?.value ?? null,
-      manifest_sha256: r.integrity.manifest_sha256 ?? null, evidence_intact: r.integrity.ok, integrity_problems: r.integrity.problems, deviations: r.record?.deviations ?? [] })),
+      manifest_sha256: r.integrity.manifest_sha256 ?? null, evidence_intact: r.integrity.ok, integrity_problems: r.integrity.problems, signatures: r.integrity.signatures ?? [], trusted_timestamp: r.integrity.timestamp ?? null, deviations: r.record?.deviations ?? [] })),
     excluded_dry_runs: summary.excluded.map((r) => r.run_id) };
   store.put('report.json', Buffer.from(JSON.stringify(json, null, 2) + '\n'));
   const html = reportHtml(rep);
@@ -171,5 +177,8 @@ export async function buildReport(inputs, { title = 'Validation summary report',
   store.event('report_finished', { all_pass: summary.allPass, open_items: summary.open.length });
   const sealed = store.seal();
   fs.writeFileSync(path.join(dir, 'manifest.sha256'), `${sealed.sha256}  manifest.json\n`);
-  return { dir, reportId, summary, manifestSha256: sealed.sha256 };
+  const attest = { signature: null, timestamp: null, problems: [] };
+  if (signKey) attest.signature = signRun(dir, { key: loadPrivateKey(signKey), signer, role: 'Report generated by' });
+  if (tsa) { try { attest.timestamp = await timestampRun(dir, { url: tsa }); } catch (e) { attest.problems.push(`trusted timestamp not obtained: ${e.message.split('\n')[0]}`); } }
+  return { dir, reportId, summary, manifestSha256: sealed.sha256, attest };
 }

@@ -99,9 +99,18 @@ produce a false PASS or undetected altered evidence. *Fulfilled by*: **T** = too
 | URS-VS-25 | Execution records and summary reports are signed in {{eQMS}}, and the manifest hash is entered on the signed record. | H | P | {{SOP}} |
 | URS-VS-26 | Run directories are retained in protected (WORM or access-controlled) storage for {{retention period}}. | H | I | {{infrastructure qualification}} |
 | URS-VS-27 | The execution host's clock is synchronised to a reference time source. | M | I | IQ-07 |
-| URS-VS-28 | Tool, Playwright, Chromium and Node versions are under change control. A change triggers an assessment and, where needed, re-execution of the OQ. | H | P | 03 §10 |
+| URS-VS-28 | Tool, Playwright, browser (Chromium, and Firefox or WebKit where used) and Node versions are under change control. A change triggers an assessment and, where needed, re-execution of the OQ. | H | P | 03 §10 |
 | URS-VS-29 | Authors, reviewers and initiators are trained in the protocol format, the review checklist and the deviation process. | M | P | {{training records}} |
 | URS-VS-30 | Expected values in protocols come from requirements or independent calculation, not from the application. AI-assisted protocols are reviewed against requirements before approval. | H | P | {{SOP}}, review checklist in the review copy |
+
+### 4.6 Optional functions (delete the rows that are not used)
+
+| ID | Requirement | Crit. | By | Verified in |
+|---|---|---|---|---|
+| URS-VS-31 | An approval and a sealed run or report can be signed with a person's key. Verification against that person's public key fails if the evidence, the signed statement (signer, role, time) or the key was changed, or if the signature is missing. | H | T + P | OQ-13; key procedure {{SOP}} |
+| URS-VS-32 | A sealed run or report can receive an RFC 3161 timestamp from {{TSA}}. Verification fails if the token belongs to another manifest or was not issued under the given certificate chain. The difference between the host clock and the TSA's time is recorded. | M | T | OQ-13 |
+| URS-VS-33 | A protocol states the browser engine it is executed in. The engine and its version are on every record. In every engine used, correct applications pass and the planted defects fail. | H | T | OQ-14 |
+| URS-VS-34 | A run can be recorded on video: unedited, in real time, hashed into the evidence like every other file, with each step's position in the video on the record. | L | T | OQ-14 |
 
 ## 5. Approval
 

@@ -23,7 +23,8 @@ is $569.90 where 3 × $189.99 = $569.97.*
 ## What you get
 
 A **protocol** (YAML) lists steps: what a tester does, the requirement it covers,
-and what must be displayed. validshot executes it in a pinned Chromium and produces
+and what must be displayed. validshot executes it in a pinned browser (Chromium by
+default; Firefox or WebKit if the protocol says so) and produces
 three kinds of document. All of them are in [docs/sample/](docs/sample/), generated
 from the example protocol and unedited.
 
@@ -64,8 +65,9 @@ rationale: [docs/design.md](docs/design.md).
   modified for the picture.
 - **"Displayed correctly" is more than the DOM.** Every text or visibility assertion
   also checks that the element is in the viewport, not covered by another element,
-  and not truncated. A badge hidden under a banner FAILs even if its DOM text is
-  right.
+  not truncated, and legible in the rendered pixels. A badge hidden under a banner
+  FAILs even if its DOM text is right. So does text under an overlay that hit-testing
+  cannot see (`pointer-events: none`), or text in the colour of its background.
 - **Failures are recorded, not hidden.** A failed assertion is recorded as FAIL with
   its actual value, and the run continues. A failed action FAILs its step and marks
   every later step BLOCKED.
@@ -78,7 +80,7 @@ npx playwright install chromium        # once, if not already cached
 validshot --help
 ```
 
-Pin the exact version in a validated setup (`npm install validshot@0.2.1`): the tool
+Pin the exact version in a validated setup (`npm install validshot@0.3.0`): the tool
 version goes on every record, and a version change needs its own assessment.
 
 ## Quick start (from a clone, with the example apps)
@@ -163,10 +165,66 @@ runs/KA-001-20261110T154735Z-9a05/
   audit.jsonl              append-only, each entry hashes the previous one
   manifest.json            sha256 of every file + chain head
   manifest.sha256          write this on the signed record / store it read-only
+  video/run.webm           optional: the run as the browser recorded it (in the manifest)
+  manifest.sig.json        optional: key signatures over the manifest
+  manifest.tsr (+ .json)   optional: RFC 3161 timestamp token for the manifest
 ```
 
 `validshot verify-run` re-hashes every file and walks the chain. A swapped
-screenshot, an edited or deleted log entry, or a changed record is reported.
+screenshot, an edited or deleted log entry, or a changed record is reported. If the
+run is signed or timestamped, those are checked too.
+
+## Signatures and trusted time
+
+A local hash chain detects an edit, but someone who can write to the run directory
+can rewrite all of it consistently. Two things over the sealed manifest close that
+gap, and both are optional:
+
+```bash
+validshot keygen keys/t-tester                 # Ed25519: t-tester.key.pem (private), t-tester.pub.pem
+validshot lock p.yaml --approver "A. Reviewer" --reason "Initial approval" --sign-key keys/a-reviewer.key.pem
+validshot run  p.yaml --initiator "T. Tester" --sign-key keys/t-tester.key.pem --tsa http://timestamp.digicert.com
+validshot sign runs/<run> --sign-key keys/a-reviewer.key.pem --signer "A. Reviewer" --role "Reviewed by"
+
+validshot verify-run runs/<run> --trust keys/t-tester.pub.pem --tsa-ca /etc/ssl/cert.pem --require-timestamp
+```
+
+- **A key signature** binds a signer's name, role and time to the manifest hash (or,
+  for a lock, to the protocol's bytes). With `--trust`, verification fails unless a
+  valid signature from that key is there, so a rewritten or unsigned run is rejected.
+  Several people can sign the same run.
+- **A trusted timestamp** is a token from an RFC 3161 time-stamping authority saying
+  that this manifest existed at that time. Only the hash is sent. The run output and
+  `manifest.tsr.json` state how far the host clock was from the TSA's time.
+  `--tsa-ca` verifies the token's issuer with OpenSSL; without it, `verify-run` only
+  confirms that the token is about this manifest.
+- `VALIDSHOT_SIGN_KEY` and `VALIDSHOT_TSA` set the defaults for `--sign-key` and `--tsa`.
+
+**These are not 21 CFR Part 11 electronic signatures.** A key file proves that
+someone held the key, not who that was. The private key is not encrypted. Assigning
+keys to people, protecting and replacing them is your procedure. The gap is only
+closed if the private key is out of reach of whoever can write to the evidence, and
+if verification asks for the signature (`--trust`).
+
+## Browsers and video
+
+```yaml
+environment:
+  base_url: https://test.example.com/app
+  browser: webkit        # chromium (default) | firefox | webkit | chrome | msedge
+  video: true            # or `validshot run … --video` for one run
+```
+
+- The engine is set in the protocol, so it is part of what the reviewer approves, and
+  it is on every record with its version. `chromium`, `firefox` and `webkit` are the
+  builds Playwright pins (`npx playwright install firefox webkit`). `chrome` and
+  `msedge` use the browser installed on the host, whose version validshot records
+  but does not pin. Playwright's WebKit and Firefox are those engines, not the
+  Safari and Firefox releases your users install.
+- The video is what the browser recorded of the test page: real time, not cut, no
+  cursor or caption added. It is hashed into the manifest like every other file, and
+  each step in the record lists its position in the video. It is supplementary: the
+  verdicts rest on the raw step screenshots.
 
 ## Review copy and summary report
 
@@ -216,18 +274,20 @@ The full YAML reference and edge-case checklist are in
 ### With a coding agent (MCP, authoring only)
 
 ```json
-{ "mcpServers": { "validshot": { "command": "npx", "args": ["-y", "validshot@0.2.1", "mcp"] } } }
+{ "mcpServers": { "validshot": { "command": "npx", "args": ["-y", "validshot@0.3.0", "mcp"] } } }
 ```
 
 Tools: `validshot_guide`, `inspect_page`, `check_protocol`, `dry_run`,
 `render_protocol`. There is no tool for lock, formal run or report. For Claude Code,
 also copy `skills/validshot/` to `.claude/skills/validshot/`.
 
-## Status: 0.2.1 (M1 of the design + authoring loop)
+## Status: 0.3.0 (M1 of the design + authoring loop)
 
 Done:
-- Evidence Runner (M1);
+- Evidence Runner (M1), in Chromium, Firefox or WebKit, with an optional video;
 - review copy, lock and summary report;
+- key signatures and RFC 3161 timestamps over sealed evidence;
+- display check on the rendered pixels as well as the DOM;
 - agent authoring via MCP (M3; the 80 % acceptance metric has not been measured);
 - known-answer apps and tests;
 - a tool validation template pack in [docs/tool-validation/](docs/tool-validation/):
@@ -237,19 +297,22 @@ Done:
 Not done yet. Each of these needs to exist before validshot output can serve as
 formal evidence:
 
-- **Part 11 electronic signatures and access control (M4).** Records carry
-  wet-ink / external e-signature blocks. The lock is a review record, not a
-  signature.
-- **WORM storage / external anchoring** of the manifest hash. A local hash chain
-  detects edits, but someone with full admin access can rewrite the whole chain.
-- **Trusted time.** Timestamps come from the host clock, and NTP sync is not
-  verified (the record says so).
+- **Part 11 electronic signatures and access control (M4).** Key signatures show
+  which key signed, not which person; there is no authentication, and nothing is
+  printed on the PDF. Records still carry wet-ink / external e-signature blocks, and
+  the lock is a review record.
+- **WORM storage.** A signature and a timestamp make a rewritten run detectable when
+  verification demands them. They do not stop deletion, and they depend on where the
+  private key is kept.
+- **Trusted time inside the record.** The timestamp covers the sealed manifest. Step
+  times come from the host clock; its distance from the TSA is recorded, NTP sync is
+  not verified.
 - **PDF/A** archival output, Word template import/fill-back (M2), traceability
   export to validation platforms (M6).
 - **An executed qualification.** The validation pack is a set of templates; each
   organisation executes the IQ/OQ in its own environment (`npm run oq` writes
   `oq-results.tap`). The [known limitations](docs/tool-validation/04-known-limitations.md)
-  include display-check gaps, such as overlays with `pointer-events: none`.
+  list what the display check still cannot see.
 - Determinism means the same protocol, tool version and system state give the same
   steps and verdicts. Screenshots are not guaranteed pixel-identical.
 
@@ -257,7 +320,9 @@ formal evidence:
 
 ```bash
 npm test     # unit, tamper detection, known-answer (good/bad apps), failure model,
-             # timing, display check, review copy, summary report, MCP surface
+             # timing, display check, review copy, summary report, MCP surface,
+             # signatures, timestamps (needs openssl), video; Firefox and WebKit
+             # tests are skipped when those engines are not installed
 npm run oq   # the same suite as OQ evidence: also writes oq-results.tap
 ```
 

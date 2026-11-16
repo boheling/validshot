@@ -12,7 +12,16 @@ const TARGET_KEYS = ['role', 'name', 'exact', 'label', 'text', 'testid', 'placeh
 export const CHECKS = ['visible', 'text', 'contains', 'matches', 'value', 'count', 'enabled', 'checked', 'attribute'];
 const PAGE_CHECKS = ['url', 'title'];
 
+// Browser engines a protocol can name. The engine is part of what the reviewer approves:
+// it is set in the protocol, not on the command line. chromium, firefox and webkit are
+// the builds Playwright pins; chrome and msedge are the branded browsers installed on
+// the host, whose version is recorded but not pinned by validshot.
+export const BROWSERS = ['chromium', 'firefox', 'webkit', 'chrome', 'msedge'];
+
 export const DEFAULTS = {
+  browser: 'chromium',
+  video: false,
+  min_contrast: 2,
   viewport: { width: 1280, height: 800 },
   timezone: 'UTC',
   locale: 'en-US',
@@ -46,6 +55,11 @@ function validate(doc) {
   if (p && p.version === undefined) errors.push('protocol.version is required');
   if (!p?.title) errors.push('protocol.title is required');
   if (!doc.environment?.base_url) errors.push('environment.base_url is required');
+  const env = doc.environment ?? {};
+  if (env.browser !== undefined && !BROWSERS.includes(env.browser)) errors.push(`environment.browser must be one of ${BROWSERS.join(', ')}`);
+  if (env.video !== undefined && typeof env.video !== 'boolean') errors.push('environment.video must be true or false');
+  const contrastOk = (v) => typeof v === 'number' && v >= 1 && v <= 21;
+  if (env.min_contrast !== undefined && !contrastOk(env.min_contrast)) errors.push('environment.min_contrast must be a number from 1 to 21 (a contrast ratio; 1 switches the legibility floor off)');
   const reqs = doc.requirements ?? {};
   if (!Array.isArray(doc.steps) || !doc.steps.length) { errors.push('steps: at least one step is required'); return { errors, warnings }; }
   const ids = new Set();
@@ -84,12 +98,14 @@ function validate(doc) {
       }
       if (e?.matches !== undefined) { try { new RegExp(e.matches); } catch (x) { errors.push(`${w}: bad regex: ${x.message}`); } }
       for (const k of ['within_ms', 'timeout_ms']) if (e?.[k] !== undefined && !(Number.isInteger(e[k]) && e[k] > 0)) errors.push(`${w}: ${k} must be a positive whole number of milliseconds`);
+      if (e?.min_contrast !== undefined && !contrastOk(e.min_contrast)) errors.push(`${w}: min_contrast must be a number from 1 to 21`);
       if (e?.display_check === false && !e.display_check_reason) errors.push(`${w}: display_check: false needs a display_check_reason`);
-      const unknown = Object.keys(e ?? {}).filter((x) => ![...CHECKS, ...PAGE_CHECKS, 'target', 'display_check', 'display_check_reason', 'note', 'within_ms', 'timeout_ms'].includes(x));
+      const unknown = Object.keys(e ?? {}).filter((x) => ![...CHECKS, ...PAGE_CHECKS, 'target', 'display_check', 'display_check_reason', 'note', 'within_ms', 'timeout_ms', 'min_contrast'].includes(x));
       if (unknown.length) errors.push(`${w}: unknown key(s) ${unknown.join(', ')}`);
     });
     if (s?.screenshot && !['viewport', 'full_page'].includes(s.screenshot)) errors.push(`${where}: screenshot must be viewport or full_page`);
   });
+  if (['chrome', 'msedge'].includes(env.browser)) warnings.push(`environment.browser ${env.browser}: the browser installed on the host is used; its version is recorded on every record but is not pinned by validshot`);
   if (!doc.system_version) warnings.push('no system_version source: every formal run will need --system-version (recorded as operator-confirmed)');
   const covered = new Set(doc.steps.flatMap((s) => [].concat(s?.req ?? [])));
   for (const r of Object.keys(reqs)) if (!covered.has(r)) warnings.push(`requirement ${r} is not covered by any step`);

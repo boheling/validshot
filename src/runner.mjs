@@ -3,7 +3,7 @@
 // (drawn in a separate browser context from the raw PNG, so the app is never touched).
 // A failed assertion is recorded as FAIL with its actual value and the run continues;
 // a failed action FAILs its step and marks every later step BLOCKED (not executed).
-import { chromium } from 'playwright';
+import * as playwright from 'playwright';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -15,6 +15,7 @@ import { perform, evaluate, describeAction, describeAssertion, boxOf, resolveUrl
 import { renderRecord, annotatedHtml } from './record.mjs';
 import { toPdf } from './pdf.mjs';
 import { TOOL_VERSION, PLAYWRIGHT_VERSION } from './version.mjs';
+import { loadPrivateKey, signRun, timestampRun } from './sign.mjs';
 
 const stamp = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d+Z$/, 'Z');
 
@@ -46,9 +47,12 @@ async function resolveSystemVersion(context, doc, baseUrl, given) {
   return null;
 }
 
+// chrome and msedge are Chromium launched through the browser installed on the host
+const launcher = (name) => (['chrome', 'msedge'].includes(name) ? { engine: playwright.chromium, options: { channel: name } } : { engine: playwright[name], options: {} });
+
 export async function run(file, {
   dryRun = false, initiator, systemVersion, baseUrl: baseOverride, outDir,
-  headless = true, storageState, log = () => {},
+  headless = true, storageState, video: videoFlag = false, signKey, signer, tsa, log = () => {},
 } = {}) {
   const p = loadProtocol(path.resolve(file));
   if (p.errors.length) throw new Error(`protocol has errors:\n  - ${p.errors.join('\n  - ')}`);
@@ -64,30 +68,40 @@ export async function run(file, {
   store.put('protocol.yaml', p.bytes);
   if (lock.lock) store.put('protocol.lock.json', fs.readFileSync(lock.file ?? path.resolve(file).replace(/\.ya?ml$/i, '.lock.json')));
 
-  const browser = await chromium.launch({ headless });
+  // check the signing key before anything runs: a run that cannot be signed as asked must not start
+  const key = signKey ? loadPrivateKey(signKey) : null;
+  const { engine, options } = launcher(env.browser);
+  let browser;
+  try { browser = await engine.launch({ headless, ...options }); }
+  catch (e) { store.event('run_aborted', { run_id: runId, dry_run: dryRun, reason: `browser ${env.browser} could not be started: ${e.message.split('\n')[0]}` }); store.seal(); throw new Error(`browser ${env.browser} could not be started (install it with: npx playwright install ${env.browser}): ${e.message.split('\n')[0]}`); }
   const contextOptions = { viewport: env.viewport, timezoneId: env.timezone, locale: env.locale, deviceScaleFactor: 1, reducedMotion: 'reduce', colorScheme: 'light', storageState };
-  const context = await browser.newContext(contextOptions);
-  const page = await context.newPage();
-  const consoleErrors = [];
-  page.on('pageerror', (e) => { consoleErrors.push(e.message); store.event('page_error', { message: e.message }); });
-  page.on('console', (m) => { if (m.type() === 'error') { consoleErrors.push(m.text()); store.event('console_error', { text: m.text() }); } });
+  const video = env.video || videoFlag;
+  const videoTmp = video ? fs.mkdtempSync(path.join(os.tmpdir(), 'validshot-video-')) : null;
 
   const meta = {
     run_id: runId, dry_run: dryRun,
     protocol: { id: doc.protocol.id, version: doc.protocol.version, title: doc.protocol.title, sha256: p.hash, file: path.basename(file), source: doc.protocol.source ?? null },
-    lock: lock.lock ? { ok: lock.ok, approved_by: lock.lock.approved_by, approver_role: lock.lock.approver_role, approved_at: lock.lock.approved_at, reason: lock.lock.reason, problem: lock.ok ? null : lock.reason } : { ok: false, problem: lock.reason },
+    lock: lock.lock ? { ok: lock.ok, approved_by: lock.lock.approved_by, approver_role: lock.lock.approver_role, approved_at: lock.lock.approved_at, reason: lock.lock.reason, signed_with_key: lock.lock.signature?.key_fingerprint ?? null, problem: lock.ok ? null : lock.reason } : { ok: false, problem: lock.reason },
     initiator: initiator ?? '(dry run)',
     base_url: baseUrl, base_url_overridden: baseOverride ? { protocol: env.base_url, used: baseOverride } : null,
     environment: { ...env, color_scheme: 'light', reduced_motion: 'reduce', device_scale_factor: 1 },
-    tool: { validshot: TOOL_VERSION, playwright: PLAYWRIGHT_VERSION, browser: `chromium ${browser.version()}`, node: process.version, os: `${os.type()} ${os.release()} ${os.arch()}`, host: os.hostname() },
+    tool: { validshot: TOOL_VERSION, playwright: PLAYWRIGHT_VERSION, browser: `${env.browser} ${browser.version()}`, node: process.version, os: `${os.type()} ${os.release()} ${os.arch()}`, host: os.hostname() },
     clock: 'host system clock (UTC); NTP synchronisation not verified by validshot',
     started_at: started.toISOString(),
   };
 
   try {
-    meta.system_version = await resolveSystemVersion(context, doc, baseUrl, systemVersion);
+    // read in its own context, so nothing but the protocol's steps is on the video
+    const versionContext = await browser.newContext(contextOptions);
+    try { meta.system_version = await resolveSystemVersion(versionContext, doc, baseUrl, systemVersion); } finally { await versionContext.close(); }
     if (!meta.system_version && !dryRun) throw new Error('no system version: add system_version to the protocol, or pass --system-version (recorded as initiator-confirmed)');
   } catch (e) { await browser.close(); store.event('run_aborted', { run_id: runId, dry_run: dryRun, protocol: meta.protocol, initiator: meta.initiator, started_at: meta.started_at, reason: e.message }); store.seal(); throw e; }
+  const context = await browser.newContext({ ...contextOptions, ...(video ? { recordVideo: { dir: videoTmp, size: env.viewport } } : {}) });
+  const page = await context.newPage();
+  const videoStarted = Date.now();
+  const consoleErrors = [];
+  page.on('pageerror', (e) => { consoleErrors.push(e.message); store.event('page_error', { message: e.message }); });
+  page.on('console', (m) => { if (m.type() === 'error') { consoleErrors.push(m.text()); store.event('console_error', { text: m.text() }); } });
   store.event('run_started', meta);
   log(`${dryRun ? 'DRY RUN' : 'Run'} ${runId} → ${dir}`);
 
@@ -116,7 +130,7 @@ export async function run(file, {
     const order = s.expect.map((e, k) => k).sort((a, b) => (s.expect[a].within_ms === undefined) - (s.expect[b].within_ms === undefined));
     for (const k of order) {
       const e = s.expect[k];
-      const r = actionError ? { expected: describeAssertion(e), actual: '(not evaluated: action failed)', pass: false } : await evaluate(page, e, { timeout: env.assert_timeout_ms, t0 });
+      const r = actionError ? { expected: describeAssertion(e), actual: '(not evaluated: action failed)', pass: false } : await evaluate(page, e, { timeout: env.assert_timeout_ms, t0, minContrast: env.min_contrast });
       assertions[k] = e.note ? { ...r, note: e.note } : r;
     }
     // the step screenshot shows the first asserted element; any assertion target still
@@ -143,6 +157,7 @@ export async function run(file, {
     const annRef = store.put(`shots/step-${n}.annotated.png`, ann);
     const pass = !actionError && assertions.every((a) => a.pass);
     const r = { ...base, result: pass ? 'PASS' : 'FAIL', error: actionError, assertions, started_at: stepStart.toISOString(), finished_at: new Date().toISOString(),
+      ...(video ? { video_at_s: [Math.max(0, (stepStart - videoStarted) / 1000), (Date.now() - videoStarted) / 1000].map((v) => Math.round(v * 10) / 10) } : {}),
       url: page.url(), screenshot: { raw: rawRef, annotated: annRef, extra } };
     steps.push(r);
     store.event('step', r);
@@ -150,13 +165,26 @@ export async function run(file, {
     if (actionError) blockedBy = s.id;
     else if (!pass && doc.stop_on_fail) blockedBy = s.id;
   }
+  // The video is what the browser recorded of the test page from start to end: real
+  // time, not cut, not re-timed, no cursor or caption added. It is supplementary; the
+  // step screenshots remain the evidence the verdicts refer to.
+  let videoRef = null;
+  if (video) {
+    const handle = page.video();
+    await context.close();
+    try {
+      const file = await handle.path();
+      videoRef = { ...store.put('video/run.webm', fs.readFileSync(file)), started_at: new Date(videoStarted).toISOString(), note: 'browser recording of the test page: real time, unedited, no overlays; supplementary to the step screenshots' };
+    } catch (e) { store.event('video_missing', { reason: e.message.split('\n')[0] }); }
+    fs.rmSync(videoTmp, { recursive: true, force: true });
+  }
   await browser.close();
 
   const finished = new Date();
   const counts = { PASS: 0, FAIL: 0, BLOCKED: 0 };
   for (const s of steps) counts[s.result]++;
   const verdict = counts.PASS === steps.length ? 'PASS' : 'FAIL';
-  const record = { ...meta, finished_at: finished.toISOString(), verdict, counts, requirements: doc.requirements, steps, console_errors: consoleErrors,
+  const record = { ...meta, finished_at: finished.toISOString(), verdict, counts, video: videoRef, requirements: doc.requirements, steps, console_errors: consoleErrors,
     // one row per failed assertion (or per failed action / blocked step)
     deviations: steps.filter((s) => s.result !== 'PASS').flatMap((s) => (s.result === 'BLOCKED' || s.error
       ? [{ step: s.id, req: s.req, result: s.result, assertion: null, expected: s.action, actual: s.error ?? s.reason }]
@@ -171,5 +199,11 @@ export async function run(file, {
   store.put('record.pdf', pdf);
   const sealed = store.seal();
   fs.writeFileSync(path.join(dir, 'manifest.sha256'), `${sealed.sha256}  manifest.json\n`);
-  return { dir, runId, verdict, counts, record, manifestSha256: sealed.sha256 };
+  // Signature and trusted timestamp are made over the sealed manifest and stored next
+  // to it. A failure here does not undo the run: the evidence is sealed, and both can
+  // be added afterwards with `validshot sign` / `validshot timestamp`.
+  const attest = { signature: null, timestamp: null, problems: [] };
+  if (key) attest.signature = signRun(dir, { key, signer: signer ?? initiator, role: 'Executed (initiated) by' });
+  if (tsa) { try { attest.timestamp = await timestampRun(dir, { url: tsa }); } catch (e) { attest.problems.push(`trusted timestamp not obtained: ${e.message.split('\n')[0]} (add it later: validshot timestamp ${dir} --tsa ${tsa})`); } }
+  return { dir, runId, verdict, counts, record, manifestSha256: sealed.sha256, attest };
 }

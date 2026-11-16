@@ -14,3 +14,6 @@ reports/
 videos/.storyshot/
 videos/*.mp4
 videos/*.srt
+
+# signing keys: never commit a private key
+*.key.pem

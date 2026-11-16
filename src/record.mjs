@@ -1,6 +1,7 @@
 // The execution record: what an auditor reads and a reviewer signs. Rendered to
-// HTML, then to PDF by the same pinned Chromium. Signature blocks are for wet-ink
-// or the organisation's existing e-signature system (validshot has no Part 11 signing yet).
+// HTML, then to PDF by the pinned Chromium. Signature blocks are for wet-ink or the
+// organisation's existing e-signature system (key signatures live next to the manifest
+// and are not Part 11 signatures; see sign.mjs).
 
 export const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const short = (h) => (h ? `${h.slice(0, 16)}…` : '');
@@ -55,7 +56,7 @@ export function renderRecord(r) {
         ${s.assertions.map((a, k) => `<tr><td>A${k + 1}</td><td>${esc(a.expected)}${a.note ? `<br><span class="note">Note: ${esc(a.note)}</span>` : ''}</td><td>${esc(a.actual)}${a.evidence ? `<br><span class="mono">separate capture: ${esc(a.evidence)}</span>` : ''}</td><td>${badge(s.result === 'BLOCKED' ? 'BLOCKED' : a.pass ? 'PASS' : 'FAIL')}</td></tr>`).join('')}
       </table>
       ${s.screenshot ? `<div class="shot">
-      <p class="meta">Executed ${esc(s.started_at)} → ${esc(s.finished_at)} · URL ${esc(s.url)}</p>
+      <p class="meta">Executed ${esc(s.started_at)} → ${esc(s.finished_at)} · URL ${esc(s.url)}${s.video_at_s ? ` · video ${s.video_at_s[0]} s – ${s.video_at_s[1]} s` : ''}</p>
       <img src="${esc(s.screenshot.annotated.path)}" alt="annotated screenshot of step ${esc(s.id)}">
       <p class="meta mono">raw ${esc(s.screenshot.raw.path)} sha256 ${esc(s.screenshot.raw.sha256)}<br>annotated ${esc(s.screenshot.annotated.path)} sha256 ${esc(s.screenshot.annotated.sha256)}${s.screenshot.extra.map((x) => `<br>A${x.assertion} capture ${esc(x.path)} sha256 ${esc(x.sha256)}`).join('')}</p></div>` : ''}
     </section>`).join('');
@@ -77,13 +78,14 @@ export function renderRecord(r) {
     ${row('Run ID', `<span class="mono">${esc(r.run_id)}</span>`)}
     ${row('Protocol', `${esc(r.protocol.file)} · sha256 <span class="mono">${esc(r.protocol.sha256)}</span>`)}
     ${r.protocol.source ? row('Converted from', esc(r.protocol.source)) : ''}
-    ${row('Protocol approval', r.lock.ok ? `${esc(r.lock.approved_by)} (${esc(r.lock.approver_role)}), ${esc(r.lock.approved_at)} — ${esc(r.lock.reason)}. Review approval; not a Part 11 signature.` : `<span class="err">NOT APPROVED: ${esc(r.lock.problem)}</span>`)}
+    ${row('Protocol approval', r.lock.ok ? `${esc(r.lock.approved_by)} (${esc(r.lock.approver_role)}), ${esc(r.lock.approved_at)} — ${esc(r.lock.reason)}. Review approval; not a Part 11 signature.${r.lock.signed_with_key ? ` Signed with key <span class="mono">${esc(r.lock.signed_with_key)}</span>.` : ''}` : `<span class="err">NOT APPROVED: ${esc(r.lock.problem)}</span>`)}
     ${row('System under test', `${esc(r.base_url)}${r.base_url_overridden ? ` <span class="err">(overridden at start; protocol says ${esc(r.base_url_overridden.protocol)})</span>` : ''}`)}
     ${row('System version', r.system_version ? `${esc(r.system_version.value)} — ${esc(r.system_version.source)}` : '<span class="err">not recorded</span>')}
     ${row('Initiated by', esc(r.initiator))}
     ${row('Started / finished', `${esc(r.started_at)} → ${esc(r.finished_at)} · ${esc(r.clock)}`)}
     ${row('Environment', `viewport ${r.environment.viewport.width}×${r.environment.viewport.height}, scale ${r.environment.device_scale_factor}, timezone ${esc(r.environment.timezone)}, locale ${esc(r.environment.locale)}, ${esc(r.environment.color_scheme)} scheme, reduced motion; action timeout ${r.environment.action_timeout_ms} ms, assertion timeout ${r.environment.assert_timeout_ms} ms, no automatic retries`)}
     ${row('Execution tool', `validshot ${esc(r.tool.validshot)}, Playwright ${esc(r.tool.playwright)}, ${esc(r.tool.browser)}, Node ${esc(r.tool.node)}, ${esc(r.tool.os)}, host ${esc(r.tool.host)}`)}
+    ${r.video ? row('Video', `<span class="mono">${esc(r.video.path)} sha256 ${esc(r.video.sha256)}</span><br>${esc(r.video.note)}. Recording started ${esc(r.video.started_at)}; each step lists its position in the video.`) : ''}
     ${row('Evidence chain head', `<span class="mono">${esc(r.evidence_chain_head)}</span> (audit.jsonl at the time this record was generated; verify with <span class="mono">validshot verify-run</span>)`)}
   </table>
   ${reqs.length ? `<h2>2. Requirement traceability</h2><table class="asserts"><tr><th>Requirement</th><th>Text</th><th>Steps</th><th>Result</th></tr>${trace}</table>` : ''}
@@ -94,6 +96,7 @@ export function renderRecord(r) {
   <p class="meta">Each step shows the annotated copy (boxes = assertion targets). The raw screenshot is stored unmodified next to it; both hashes are listed and recorded in the audit trail.</p>
   ${steps}
   <h2>5. Review and approval</h2>
+  <p class="meta">Signatures made with a key (<span class="mono">validshot sign</span>) and a trusted timestamp are stored next to the manifest and checked by <span class="mono">validshot verify-run</span>; they are added after this record is sealed, so they are not printed here.</p>
   <div class="sigs">${sig('Executed (initiated) by')}${sig('Reviewed by')}${sig('Approved by')}</div>
   </body></html>`;
 }

@@ -62,6 +62,9 @@ requirements:                # optional but recommended: enables the traceabilit
 environment:
   base_url: https://test.example.com/app
   viewport: { width: 1280, height: 800 }    # defaults shown
+  browser: chromium          # chromium | firefox | webkit (pinned by Playwright) | chrome | msedge (installed on the host)
+  video: false               # true: record the run (unedited, hashed; supplementary evidence)
+  min_contrast: 2            # legibility floor for the display check, as a contrast ratio
   timezone: UTC
   locale: en-US
   action_timeout_ms: 5000    # each action gets ONE attempt within this time
@@ -134,8 +137,12 @@ Page-level (no target): `{ url: "/confirm" }` (URL contains),
 
 **Display check.** Every `visible: true`, `text`, `contains` or `matches` assertion
 also checks that the element is displayed intact: inside the viewport, not
-covered by another element, and its text not cut off. A covered or truncated value
-FAILs even when the DOM text is right. To turn it off for one assertion (for example an
+covered by another element, its text not cut off, and legible as rendered: the pixels
+where the text is must show something with a contrast of at least `min_contrast`
+(default 2:1) against their background. That last part catches what the DOM cannot
+show, such as an overlay with `pointer-events: none` or text in the background colour.
+Where a requirement states a contrast, put it on the assertion: `min_contrast: 4.5`.
+A covered, truncated or illegible value FAILs even when the DOM text is right. To turn it off for one assertion (for example an
 empty error area), you must give a reason:
 `display_check: false, display_check_reason: "empty when there is no error"`.
 

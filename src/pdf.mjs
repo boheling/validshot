@@ -1,4 +1,4 @@
-// HTML → A4 PDF with the same pinned Chromium that executes the runs. The footer
+// HTML → A4 PDF with the pinned Chromium (also when a run executes in another engine). The footer
 // identifies the document on every page (run ID, protocol hash or report ID).
 import { chromium } from 'playwright';
 import { esc } from './record.mjs';

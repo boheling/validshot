@@ -57,7 +57,7 @@ Execute in the formal-run environment. Record actual values.
 | IQ-02 | Node.js | `node --version` | ≥ 22, and equal to {{node version}} | | | |
 | IQ-03 | Source at the qualified version | `git clone --branch v{{version}} https://github.com/boheling/validshot`, then `git rev-parse HEAD` | Commit {{commit sha}} | | | |
 | IQ-04 | Dependencies exactly as locked | `npm ci`, then `npm ls playwright yaml @modelcontextprotocol/sdk zod` | Versions equal those in `package.json` (exact pins); `npm ci` completes without errors | | | |
-| IQ-05 | Browser | `npx playwright install chromium`, then `npx playwright --version` | Playwright {{playwright version}} | | | |
+| IQ-05 | Browser | `npx playwright install chromium` (add `firefox` and/or `webkit` if protocols name them), then `npx playwright --version` | Playwright {{playwright version}}; every engine in scope installed | | | |
 | IQ-06 | Tool version | `npx validshot --version` (or, if installed from npm: `npm ls validshot`, and record the `integrity` value from `package-lock.json`) | {{version}} | | | |
 | IQ-07 | Clock | Record the time-synchronisation status of the host ({{command for your OS}}) | Synchronised to {{time source}} | | | |
 
@@ -126,11 +126,12 @@ Expected deviations, and no others:
 | 2 | Formal run of KA-001 against `/bad/` (see README "Quick start"); open `record.pdf` | Deviations table as above. Step 1 screenshot shows the banner over the badge, with a red box on A3 | | |
 
 ### OQ-05 Display integrity
-**URS:** 09 · **Risk:** RA-03 · **Automated:** `display.test.mjs › display check: wrapped inline link is intact; overlay, clipping and truncation are caught`
+**URS:** 09 · **Risk:** RA-03 · **Automated:** `display.test.mjs › display check (<engine>): intact text passes; covers, clipping, truncation, illegible rendering and a failed web font are caught` (one test per installed engine)
 
 | # | Procedure | Expected result | Actual | P/F |
 |---|---|---|---|---|
-| 1 | Automated test above | pass: overlay → "covered by"; ellipsis → "cut off horizontally"; a wrapped inline link is not flagged | | |
+| 1 | Automated tests above, for every engine in scope | pass: overlay → "covered by"; ellipsis → "cut off horizontally"; a wrapped inline link, plain text, grey text at 3.5:1, a filled and an empty field are not flagged; an overlay with `pointer-events: none`, a 90 % white veil, white text on white and text at 1.9:1 → "not legible as rendered" with the measured contrast; a `pointer-events: none` cover over the start of a line → "part of the text is not legible"; the same grey text fails when the check asks for 4.5:1; a web font that cannot load → "is not loaded" | | |
+| 2 | `png … › the decoder and the contrast measure agree with known pictures` (in `attest.test.mjs`) | pass: black on white measures 21:1, #777 on white 4.48:1, a flat area 1:1 | | |
 
 ### OQ-06 Failure model and dry-run marking
 **URS:** 10, 11, 18 · **Risk:** RA-04, RA-07, RA-11 · **Automated:** `failure-model.test.mjs › ambiguous target FAILs, the run continues; a failed action BLOCKs later steps; dry runs are marked`
@@ -183,6 +184,23 @@ Expected deviations, and no others:
 | 1 | Automated test above | pass: the history lists PASS, FAIL and the aborted run (system version mismatch); the dry run is excluded; an altered screenshot in an earlier run is reported as an integrity failure; the report directory passes `verify-run` | | |
 | 2 | `validshot report <runs dir with the OQ-04 #2 run and a later correct run>`; inspect `report.pdf` | Earlier FAIL kept in the history and the deviations; open item asking to confirm its deviation record; conclusion field empty, for the signatories | | |
 
+### OQ-13 Signatures and trusted time (if used: URS-VS-31, 32)
+**URS:** 31, 32 · **Risk:** RA-01, RA-10 · **Automated:** `attest.test.mjs › signatures: …` (2 tests), `› lock: an approval signed with a key is checked; …`, `› RFC 3161: …` (2 tests; they need `openssl` on the host and use a throwaway local TSA)
+
+| # | Procedure | Expected result | Actual | P/F |
+|---|---|---|---|---|
+| 1 | Automated tests above | pass: a signed run verifies against the signer's public key or fingerprint; an unsigned run, a run signed with another key, a changed signer name or time, a swapped public key and a signature copied to another run are all rejected; a signed approval is rejected when the approver's name or the protocol is changed; a timestamp is bound to its manifest, verifies against the issuing chain only, and nothing is stored when the TSA is down or answers about another hash | | |
+| 2 | `validshot keygen <name>`; `validshot run <protocol> --initiator "<name>" --sign-key <name>.key.pem --tsa {{TSA URL}}`; `validshot verify-run <run dir> --trust <name>.pub.pem --tsa-ca {{TSA chain}} --require-timestamp` | "intact"; the signer with "TRUSTED KEY"; the timestamp with "issuer verified". The run output states the host clock's difference to the TSA | | |
+| 3 | Delete `manifest.sig.json` from a copy of that run; repeat the `verify-run` of #2 | "not signed (a trusted key was required)" | | |
+
+### OQ-14 Browser engines and video (if used: URS-VS-33, 34)
+**URS:** 33, 34 · **Risk:** RA-02, RA-03, RA-16 · **Automated:** `attest.test.mjs › known-answer protocol in firefox: …`, `› known-answer protocol in webkit: …`, `› a signed run with video: …`, `› protocol: unknown browser, bad video and contrast settings are errors; …`
+
+| # | Procedure | Expected result | Actual | P/F |
+|---|---|---|---|---|
+| 1 | Automated tests above, for every engine in scope (a test for an engine that is not installed is reported as skipped, which is a deviation if that engine is in scope) | pass: in each engine the correct application passes and the defective one fails with the same 9 deviations as in OQ-04; the record names the engine and its version | | |
+| 2 | Formal run of a protocol with `environment.video: true`; play `video/run.webm`; `validshot verify-run` | The video shows the run from the first to the last step without cuts; its sha256 is on the record and in the manifest; each step lists its position in the video | | |
+
 ### OQ-12 AI authoring boundary
 **URS:** 06, 23 · **Risk:** RA-06 · **Automated:** `mcp.test.mjs › MCP exposes authoring tools only — no lock, no formal run`
 
@@ -213,6 +231,8 @@ Expected deviations, and no others:
 | VS-21, 22 | RA-14 | OQ-11 |
 | VS-23 | RA-06 | OQ-12 |
 | VS-24 to 30 | RA-01, RA-10, RA-16, RA-17 | procedures / infrastructure (not in this OQ) |
+| VS-31, 32 (optional) | RA-01, RA-10 | OQ-13 |
+| VS-33, 34 (optional) | RA-02, RA-03, RA-16 | OQ-14 |
 
 ## 8. Deviations during the OQ
 
@@ -237,7 +257,7 @@ The OQ shows that the tool works on known answers. PQ shows that it works for
 ## 10. Requalification
 
 Assess, and where needed re-execute (fully or in part, based on risk), when any of
-these changes: validshot version; Playwright or Chromium version; Node major version;
+these changes: validshot version; Playwright or browser-engine version; Node major version;
 OS major version or host type; the protocol format or the assertion semantics as
 described in the release notes. A full `npm run oq` takes a few minutes, so a full
 re-execution is usually the simplest choice.

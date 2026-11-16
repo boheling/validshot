@@ -79,12 +79,12 @@ export function reviewHtml(p, l, { now = new Date() } = {}) {
   <h2>2. Test environment and execution rules</h2><table>
     ${row('System under test', `${esc(env.base_url)} <span class="meta">(the initiator may point a run elsewhere; the record then flags the override)</span>`)}
     ${row('System version', versionSource(d.system_version))}
-    ${row('Browser', `Chromium driven by Playwright ${esc(PLAYWRIGHT_VERSION)}; the exact browser build is recorded by each run`)}
+    ${row('Browser', `${esc({ chromium: 'Chromium', firefox: 'Firefox', webkit: 'WebKit', chrome: 'Google Chrome as installed on the execution host', msedge: 'Microsoft Edge as installed on the execution host' }[env.browser])} driven by Playwright ${esc(PLAYWRIGHT_VERSION)}; the exact browser build is recorded by each run${env.video ? '. Each run is recorded on video (unedited; supplementary to the step screenshots)' : ''}`)}
     ${row('Screen and locale', `viewport ${env.viewport.width}×${env.viewport.height}, scale 1, timezone ${esc(env.timezone)}, locale ${esc(env.locale)}, light scheme, reduced motion`)}
     ${row('Timeouts', `each action ${env.action_timeout_ms} ms; each check must hold within ${env.assert_timeout_ms} ms unless stated otherwise`)}
     ${row('Failure handling', `${d.stop_on_fail ? 'The run stops at the first failed check.' : 'A failed check is recorded as FAIL with its actual value and the run continues.'} A failed action fails its step and every later step is recorded as BLOCKED. Nothing is retried.`)}
   </table>
-  <p class="meta">How a check is judged: text is compared as displayed, with runs of whitespace collapsed. A target must match exactly one element; two or more matches FAIL as ambiguous. Every check of shown text or visibility also requires the element to be displayed intact: inside the screen, not covered by another element and its text not cut off. Actual values, pass/fail, timestamps and screenshots are recorded automatically by each run in its execution record.</p>
+  <p class="meta">How a check is judged: text is compared as displayed, with runs of whitespace collapsed. A target must match exactly one element; two or more matches FAIL as ambiguous. Every check of shown text or visibility also requires the element to be displayed intact: inside the screen, not covered by another element, its text not cut off, and legible in the rendered picture (contrast of at least ${env.min_contrast}:1 against its background, unless a check states its own). Actual values, pass/fail, timestamps and screenshots are recorded automatically by each run in its execution record.</p>
 
   ${reqs.length ? `<h2>3. Requirements and coverage</h2><table class="trace"><tr><th>Requirement</th><th>Text</th><th>Steps</th><th>Coverage</th></tr>${trace}</table>` : ''}
 
